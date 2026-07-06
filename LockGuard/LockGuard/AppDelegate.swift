@@ -56,10 +56,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// is activated, AppLockService posts this notification; we resolve the
     /// running app's PID and present WindowOverlayService over its window.
     private func observeAuthOverlayRequests() {
-        // When the overlay resolves (auth passed or cancelled), release the
-        // challenge guard so the same app can challenge again next activation.
-        overlay.onResolved = { [weak self] in self?.appLock.clearPending() }
-
         NotificationCenter.default.publisher(for: .lockGuardShouldPresentAuthOverlay)
             .receive(on: RunLoop.main)
             .sink { [weak self] note in
@@ -79,6 +75,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSLog("LockGuard: %@ not running; nothing to overlay", app.bundleID)
             appLock.clearPending()
             return
+        }
+        // On resolve: success → grant a session of access for this app; cancel
+        // → just clear pending (the app was already hidden by the overlay).
+        let bundleID = app.bundleID
+        overlay.onResolved = { [weak self] success in
+            if success { self?.appLock.grantSession(bundleID: bundleID) }
+            else { self?.appLock.clearPending() }
         }
         overlay.present(forPID: running.processIdentifier, appName: app.name)
     }

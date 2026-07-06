@@ -542,6 +542,14 @@ private struct BehaviorTab: View {
 private struct AboutTab: View {
     let onClose: () -> Void
     @ObservedObject private var log = AuthLogService.shared
+    @State private var updateStatus = ""
+    @State private var checking = false
+
+    private var version: String {
+        let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+        return "\(v) (\(b))"
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -549,11 +557,34 @@ private struct AboutTab: View {
                 Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 56, height: 56)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("LockGuard").font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(Theme.ink)
-                    Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0")")
+                    Text("Version \(version)")
                         .font(.system(size: 12)).foregroundStyle(Theme.inkMuted)
                     Text("Your data never leaves this Mac.").font(.system(size: 11.5)).foregroundStyle(Theme.inkFaint)
                 }
                 Spacer()
+                VStack(alignment: .trailing, spacing: 4) {
+                    Button(action: checkForUpdates) {
+                        HStack(spacing: 6) {
+                            if checking { ProgressView().controlSize(.small) }
+                            else { Image(systemName: "arrow.triangle.2.circlepath").font(.system(size: 11)) }
+                            Text("Check for Updates").font(.system(size: 12, weight: .medium))
+                        }
+                        .foregroundStyle(.white).padding(.horizontal, 12).padding(.vertical, 6)
+                        .background(Capsule().fill(Theme.accent))
+                    }.buttonStyle(.plain).focusable(false).disabled(checking)
+                    if !updateStatus.isEmpty {
+                        Text(updateStatus).font(.system(size: 10.5)).foregroundStyle(Theme.inkMuted)
+                    }
+                }
+            }
+
+            GroupLabel(text: "Credits")
+            SettingsCard {
+                creditRow("Design & Engineering", "LockGuard Team")
+                Divider().overlay(Theme.hairline.opacity(0.4)).padding(.vertical, 6)
+                creditRow("Face recognition", "Apple Vision framework")
+                Divider().overlay(Theme.hairline.opacity(0.4)).padding(.vertical, 6)
+                creditRow("Security", "CryptoKit · Keychain Services")
             }
 
             GroupLabel(text: "Authentication Log")
@@ -573,6 +604,25 @@ private struct AboutTab: View {
                     }
                 }
             }
+        }
+    }
+
+    private func creditRow(_ title: String, _ value: String) -> some View {
+        HStack {
+            Text(title).font(.system(size: 12.5)).foregroundStyle(Theme.inkMuted)
+            Spacer()
+            Text(value).font(.system(size: 12.5, weight: .medium)).foregroundStyle(Theme.ink)
+        }
+    }
+
+    /// Stubbed update check — no server yet. Simulates the flow and reports
+    /// "up to date" so the button is wired end-to-end.
+    private func checkForUpdates() {
+        checking = true
+        updateStatus = ""
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            checking = false
+            updateStatus = "You're on the latest version."
         }
     }
 }

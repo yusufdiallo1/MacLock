@@ -27,9 +27,9 @@ import SwiftUI
 final class WindowOverlayService {
     static let shared = WindowOverlayService()
 
-    /// Called when the user authenticates (or the overlay is cancelled). The
-    /// caller uses this to release the challenge guard (AppLockService.clearPending).
-    var onResolved: (() -> Void)?
+    /// Called when the overlay resolves. `true` = authenticated (grant a
+    /// session), `false` = cancelled/hidden. The caller updates lock state.
+    var onResolved: ((_ success: Bool) -> Void)?
 
     private var overlayWindow: NSWindow?
     private var axObserver: AXObserver?
@@ -69,17 +69,22 @@ final class WindowOverlayService {
         }
     }
 
-    /// Public dismissal for the auth layer (or a successful placeholder unlock).
+    /// Dismiss after a successful authentication (grants a session).
     func dismiss() {
-        dismiss(callResolved: true)
+        dismiss(callResolved: true, success: true)
     }
 
-    private func dismiss(callResolved: Bool) {
+    /// Dismiss after cancel (no session granted).
+    func dismissCancelled() {
+        dismiss(callResolved: true, success: false)
+    }
+
+    private func dismiss(callResolved: Bool, success: Bool = false) {
         stopTrackingWindow()
         overlayWindow?.orderOut(nil)
         overlayWindow = nil
         targetPID = nil
-        if callResolved { onResolved?() }
+        if callResolved { onResolved?(success) }
     }
 
     // MARK: - Window construction
@@ -133,7 +138,12 @@ final class WindowOverlayService {
             appIcon: appIcon,
             verifyPassword: { PasswordAuthService.shared.verify($0) },
             onSuccess: { [weak self] in self?.dismiss() },
-            onCancel: { [weak self] in self?.dismiss() },
+            onCancel: { [weak self] in
+                // Cancel = don't grant access → hide the locked app so it can't
+                // be used without authenticating (per spec).
+                NSRunningApplication(processIdentifier: targetPID)?.hide()
+                self?.dismissCancelled()
+            },
             onQuitApp: { [weak self] in
                 NSRunningApplication(processIdentifier: targetPID)?.terminate()
                 self?.dismiss()

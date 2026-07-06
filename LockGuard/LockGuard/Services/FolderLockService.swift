@@ -128,10 +128,12 @@ final class FolderLockService: ObservableObject {
             appName: lockedFolders[idx].name,
             forceFullScreen: true
         )
-        WindowOverlayService.shared.onResolved = { [weak self] in
+        WindowOverlayService.shared.onResolved = { [weak self] success in
             guard let self, let f = self.lockedFolders.first(where: { $0.path == path })
             else { return }
-            self.restore(f)
+            // Only restore the folder's contents when the user authenticated.
+            // On cancel, leave it stashed (locked).
+            if success { self.restore(f) }
         }
     }
 

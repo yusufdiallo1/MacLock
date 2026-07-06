@@ -13,6 +13,11 @@
 import AppKit
 import Combine
 
+extension Notification.Name {
+    /// Posted when everything is (re)locked — drives the menu-bar animation.
+    static let lockGuardDidLockAll = Notification.Name("com.lockguard.didLockAll")
+}
+
 @MainActor
 final class LockManager: ObservableObject {
     static let shared = LockManager()
@@ -94,6 +99,8 @@ final class LockManager: ObservableObject {
     func lockAll() {
         for i in folders.indices { folders[i].isLocked = true }
         save()
+        // Drive the menu-bar lock-close animation.
+        NotificationCenter.default.post(name: .lockGuardDidLockAll, object: nil)
     }
 
     // MARK: - Removal

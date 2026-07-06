@@ -107,6 +107,11 @@ final class AppLockService: ObservableObject {
         }
     }
 
+    /// Apps unlocked this session — they won't re-challenge until re-locked
+    /// (sleep / timeout / manual "Lock All"). This is the "grant 1 session of
+    /// access" behavior.
+    private var sessionUnlocked: Set<String> = []
+
     private func handleActivation(of app: NSRunningApplication?) {
         guard
             let app,
@@ -116,6 +121,8 @@ final class AppLockService: ObservableObject {
             // Already challenging this app — don't re-fire while the overlay is
             // up or focus is bouncing back to it.
             bundleID != challengingBundleID,
+            // Already unlocked this session — grant access without re-challenging.
+            !sessionUnlocked.contains(bundleID),
             let locked = lockedApp(for: bundleID)
         else { return }
 
@@ -197,9 +204,22 @@ final class AppLockService: ObservableObject {
         challengingBundleID = nil
     }
 
-    /// Re-lock all apps: drop any in-flight challenge state so every locked app
-    /// challenges again on its next activation. Used by sleep / timeout / kill.
+    /// Auth succeeded for `bundleID` → grant it a session of access. It won't
+    /// re-challenge until everything is re-locked (sleep / timeout / manual).
+    func grantSession(bundleID: String) {
+        sessionUnlocked.insert(bundleID)
+        pendingApp = nil
+        challengingBundleID = nil
+    }
+
+    /// The bundle ID currently being challenged, for the resolver to grant.
+    var challengingApp: String? { challengingBundleID }
+
+    /// Re-lock all apps: end every granted session and drop challenge state so
+    /// every locked app challenges again on its next activation. Used by sleep /
+    /// timeout / kill switch / manual "Lock All".
     func relockAll() {
+        sessionUnlocked.removeAll()
         pendingApp = nil
         challengingBundleID = nil
     }

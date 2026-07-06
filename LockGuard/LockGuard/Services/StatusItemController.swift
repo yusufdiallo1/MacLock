@@ -29,9 +29,16 @@ final class StatusItemController: NSObject {
     /// state we intend to keep. See `runKeepingPopoverOpen`.
     private var isPresentingModal = false
 
-    init(permissions: PermissionsManager, lockManager: LockManager = .shared) {
+    private let appLock: AppLockService
+    /// True when a locked app is waiting for the user to authenticate.
+    private var authPending = false
+
+    init(permissions: PermissionsManager,
+         lockManager: LockManager = .shared,
+         appLock: AppLockService = .shared) {
         self.permissions = permissions
         self.lockManager = lockManager
+        self.appLock = appLock
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         self.popover = NSPopover()
         super.init()
@@ -45,15 +52,30 @@ final class StatusItemController: NSObject {
             .receive(on: RunLoop.main)
             .sink { [weak self] _, _ in self?.updateAppearance() }
             .store(in: &cancellables)
+
+        // Status dot: red while a locked app is pending authentication.
+        appLock.$pendingApp
+            .receive(on: RunLoop.main)
+            .sink { [weak self] pending in
+                self?.authPending = (pending != nil)
+                self?.updateAppearance()
+            }
+            .store(in: &cancellables)
+
+        // Play the lock-close animation whenever everything (re)locks.
+        NotificationCenter.default.publisher(for: .lockGuardDidLockAll)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.playLockAnimation() }
+            .store(in: &cancellables)
     }
 
     private func configureButton() {
         guard let button = statusItem.button else { return }
-        button.image = lockImage(armed: permissions.allGranted)
-        button.image?.isTemplate = true
+        button.wantsLayer = true
         button.toolTip = "LockGuard"
         button.action = #selector(togglePopover)
         button.target = self
+        updateAppearance()
     }
 
     private func configurePopover() {
@@ -78,17 +100,64 @@ final class StatusItemController: NSObject {
         popover.contentSize = NSSize(width: 320, height: 420)
     }
 
-    /// Custom SF Symbol lock icon; closed + shielded when armed, open when not.
-    private func lockImage(armed: Bool) -> NSImage? {
-        let symbol = armed ? "lock.shield.fill" : "lock.open"
+    /// The base lock symbol. `lock.shield` when armed (per spec), `lock.open`
+    /// when setup is incomplete. Template image → auto light/dark.
+    private func lockImage(symbolName: String) -> NSImage? {
         let config = NSImage.SymbolConfiguration(pointSize: 15, weight: .medium)
-        return NSImage(systemSymbolName: symbol, accessibilityDescription: "LockGuard")?
+        let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "LockGuard")?
             .withSymbolConfiguration(config)
+        image?.isTemplate = true
+        return image
+    }
+
+    /// The full menu-bar image: the lock symbol plus a status dot.
+    /// Green = active (armed, nothing pending). Red = a locked app is pending
+    /// authentication. The dot is drawn in color, so the composite is NOT a
+    /// template image (the lock glyph still adapts via `.currentControlTint`).
+    private func composedImage(symbolName: String, dot: NSColor?) -> NSImage? {
+        guard let lock = lockImage(symbolName: symbolName) else { return nil }
+        guard let dot else { return lock }   // no dot → plain template lock
+
+        let size = NSSize(width: lock.size.width + 5, height: lock.size.height + 3)
+        let composed = NSImage(size: size)
+        composed.lockFocus()
+        // Draw the lock as a template tinted to the menu-bar text color.
+        let lockRect = NSRect(x: 0, y: 0, width: lock.size.width, height: lock.size.height)
+        NSColor.labelColor.set()
+        lock.draw(in: lockRect)
+        lockRect.fill(using: .sourceAtop)   // tint the template glyph
+        // Status dot at the top-right.
+        let d: CGFloat = 6
+        let dotRect = NSRect(x: size.width - d, y: size.height - d, width: d, height: d)
+        dot.setFill()
+        NSBezierPath(ovalIn: dotRect).fill()
+        composed.unlockFocus()
+        composed.isTemplate = false
+        return composed
     }
 
     private func updateAppearance() {
-        statusItem.button?.image = lockImage(armed: permissions.allGranted)
-        statusItem.button?.image?.isTemplate = true
+        guard let button = statusItem.button else { return }
+        let armed = permissions.allGranted
+        let symbol = armed ? "lock.shield" : "lock.open"
+        // Dot: red if auth pending, green if armed & active, none during setup.
+        let dot: NSColor? = authPending ? .systemRed : (armed ? .systemGreen : nil)
+        button.image = composedImage(symbolName: symbol, dot: dot)
+    }
+
+    /// Spring "lock closing" animation: a quick squash-and-settle on the button
+    /// layer, played when apps are (re)locked.
+    func playLockAnimation() {
+        guard let layer = statusItem.button?.layer else { return }
+        let spring = CASpringAnimation(keyPath: "transform.scale")
+        spring.fromValue = 0.7
+        spring.toValue = 1.0
+        spring.damping = 8
+        spring.stiffness = 180
+        spring.mass = 0.4
+        spring.initialVelocity = 6
+        spring.duration = spring.settlingDuration
+        layer.add(spring, forKey: "lockBounce")
     }
 
     // MARK: - Popover presentation
