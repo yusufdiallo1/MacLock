@@ -28,6 +28,9 @@
 		AA0000000000000000000116 /* WindowOverlayService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000016 /* WindowOverlayService.swift */; };
 		AA0000000000000000000117 /* AuthOverlayCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000017 /* AuthOverlayCardView.swift */; };
 		AA0000000000000000000118 /* FaceAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000018 /* FaceAuthService.swift */; };
+		AA0000000000000000000119 /* PasswordAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000019 /* PasswordAuthService.swift */; };
+		AA000000000000000000011A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001A /* SettingsView.swift */; };
+		AA000000000000000000011B /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001B /* SettingsWindowController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -54,6 +57,9 @@
 		AA0000000000000000000016 /* WindowOverlayService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowOverlayService.swift; sourceTree = "<group>"; };
 		AA0000000000000000000017 /* AuthOverlayCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthOverlayCardView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000018 /* FaceAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceAuthService.swift; sourceTree = "<group>"; };
+		AA0000000000000000000019 /* PasswordAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordAuthService.swift; sourceTree = "<group>"; };
+		AA000000000000000000001A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		AA000000000000000000001B /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 		AA00000000000000000000FF /* LockGuard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LockGuard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -108,6 +114,8 @@
 				AA0000000000000000000013 /* LockRow.swift */,
 				AA0000000000000000000014 /* LockPopoverView.swift */,
 				AA0000000000000000000017 /* AuthOverlayCardView.swift */,
+				AA000000000000000000001A /* SettingsView.swift */,
+				AA000000000000000000001B /* SettingsWindowController.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -122,6 +130,7 @@
 				AA0000000000000000000015 /* AppLockService.swift */,
 				AA0000000000000000000016 /* WindowOverlayService.swift */,
 				AA0000000000000000000018 /* FaceAuthService.swift */,
+				AA0000000000000000000019 /* PasswordAuthService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -243,6 +252,9 @@
 				AA0000000000000000000116 /* WindowOverlayService.swift in Sources */,
 				AA0000000000000000000117 /* AuthOverlayCardView.swift in Sources */,
 				AA0000000000000000000118 /* FaceAuthService.swift in Sources */,
+				AA0000000000000000000119 /* PasswordAuthService.swift in Sources */,
+				AA000000000000000000011A /* SettingsView.swift in Sources */,
+				AA000000000000000000011B /* SettingsWindowController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

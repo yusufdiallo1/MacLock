@@ -18,6 +18,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // Held so its activation observer lives for the app's lifetime.
     private let appLock = AppLockService.shared
     private let overlay = WindowOverlayService()
+    private let passwordAuth = PasswordAuthService.shared
+    private var killSwitchMonitors: [Any] = []
     private var cancellables = Set<AnyCancellable>()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -31,6 +33,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         observeAuthOverlayRequests()
+        installKillSwitchHotkey()
 
         permissions.refreshAll()
 
@@ -68,6 +71,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         overlay.present(forPID: running.processIdentifier, appName: app.name)
+    }
+
+    // MARK: - Emergency kill switch
+
+    /// Ctrl+Option+Shift+Delete, system-wide. A global monitor covers other
+    /// apps; a local monitor covers the case where LockGuard itself is focused.
+    /// Requires Accessibility permission for the global monitor to see keys in
+    /// other apps (already part of onboarding).
+    ///
+    /// LIMITATION: NSEvent global monitors are observe-only — they can't consume
+    /// the event. So when another app is frontmost, the combo also reaches that
+    /// app (Delete + modifiers). The kill switch still fires correctly; only the
+    /// keystroke isn't swallowed. Suppressing it system-wide would require a
+    /// CGEventTap. The local monitor DOES swallow it when LockGuard is focused.
+    private func installKillSwitchHotkey() {
+        let handler: (NSEvent) -> Bool = { [weak self] event in
+            let mods = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            let wanted: NSEvent.ModifierFlags = [.control, .option, .shift]
+            // keyCode 51 = Delete (Backspace). Require exactly the three mods.
+            guard event.keyCode == 51, mods == wanted else { return false }
+            self?.passwordAuth.triggerKillSwitch()
+            return true
+        }
+
+        let global = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { event in
+            _ = handler(event)
+        }
+        let local = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            // Swallow the event if it was our shortcut.
+            handler(event) ? nil : event
+        }
+        killSwitchMonitors = [global, local].compactMap { $0 }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {

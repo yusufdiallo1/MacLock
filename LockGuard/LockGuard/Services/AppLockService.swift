@@ -197,9 +197,10 @@ final class AppLockService: ObservableObject {
     // MARK: - Browsing /Applications
 
     /// Present an open panel scoped to /Applications so the user can pick apps
-    /// to lock. New apps are locked immediately. Ignores duplicates and any
-    /// selection without a readable bundle identifier.
-    func presentAddApps() {
+    /// to lock. New apps are locked immediately. Uses the async `begin` API (not
+    /// `runModal`) so it doesn't block the popover's run loop; the panel closes
+    /// itself when the user is done. `completion` fires after selections apply.
+    func presentAddApps(completion: (() -> Void)? = nil) {
         let panel = NSOpenPanel()
         panel.title = "Choose Apps to Lock"
         panel.prompt = "Lock"
@@ -209,8 +210,12 @@ final class AppLockService: ObservableObject {
         panel.allowedContentTypes = [.application]
         panel.directoryURL = URL(fileURLWithPath: "/Applications")
 
-        guard panel.runModal() == .OK else { return }
-        for url in panel.urls { lockApp(at: url) }
+        panel.begin { [weak self] response in
+            if response == .OK {
+                for url in panel.urls { self?.lockApp(at: url) }
+            }
+            completion?()
+        }
     }
 
     // MARK: - Path resolution

@@ -48,6 +48,10 @@ final class FaceAuthService: NSObject, ObservableObject {
     /// Whether an enrollment exists (drives "Set up Face Unlock" vs "Re-enroll").
     @Published private(set) var isEnrolled: Bool = false
 
+    /// While true (set by the emergency kill switch), face unlock is disabled —
+    /// `authenticate` refuses immediately so only the master password unlocks.
+    @Published private(set) var isKillSwitchActive: Bool = false
+
     /// Match strictness. 0.5 = permissive, 0.95 = strict. Persisted.
     @Published var sensitivity: Double {
         didSet {
@@ -121,6 +125,10 @@ final class FaceAuthService: NSObject, ObservableObject {
     /// service stops the camera and settles on `.success`/`.failed`. A wrong or
     /// absent face fails at the timeout rather than streaming forever.
     func authenticate(completion: @escaping (Bool) -> Void) {
+        guard !isKillSwitchActive else {
+            state = .failed(reason: "Face unlock is disabled. Enter your password.")
+            completion(false); return
+        }
         guard enrolledProfile != nil else {
             state = .failed(reason: "No face is enrolled yet.")
             completion(false); return
@@ -133,6 +141,13 @@ final class FaceAuthService: NSObject, ObservableObject {
             self.state = .authenticating
             self.startSessionIfNeeded()
         }
+    }
+
+    /// Enable/disable face unlock (driven by the emergency kill switch). When
+    /// activated, any in-flight attempt is cancelled.
+    func setKillSwitch(active: Bool) {
+        isKillSwitchActive = active
+        if active { cancel() }
     }
 
     /// Stop the camera and return to idle without resolving an attempt.

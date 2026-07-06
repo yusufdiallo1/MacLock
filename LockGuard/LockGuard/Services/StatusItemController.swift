@@ -22,6 +22,7 @@ final class StatusItemController: NSObject {
     private let lockManager: LockManager
     private let popover: NSPopover
     private var eventMonitor: Any?
+    private let settingsWindow = SettingsWindowController()
     private var cancellables = Set<AnyCancellable>()
 
     /// True while a modal picker is up so `popoverDidClose` doesn't tear down
@@ -68,9 +69,13 @@ final class StatusItemController: NSObject {
         let root = LockPopoverView(
             lockManager: lockManager,
             permissions: permissions,
-            onAddApps: { [weak self] in self?.presentPicker { $0.presentAddApps() } },
-            onAddFolders: { [weak self] in self?.presentPicker { $0.presentAddFolders() } },
-            onShowSettings: { [weak self] in self?.showOnboarding() },
+            onAddApps: { [weak self] in
+                self?.presentPicker { manager, done in manager.presentAddApps(completion: done) }
+            },
+            onAddFolders: { [weak self] in
+                self?.presentPicker { manager, done in manager.presentAddFolders(completion: done) }
+            },
+            onShowSettings: { [weak self] in self?.showSettings() },
             onQuit: { [weak self] in self?.quit() }
         )
 
@@ -141,23 +146,29 @@ final class StatusItemController: NSObject {
 
     // MARK: - Modal pickers
 
-    /// Present a modal picker without the popover dismissing underneath it.
-    /// `.transient` closes the popover the instant the panel takes key focus,
-    /// so we drop to `.applicationDefined`, disarm the outside-click monitor
-    /// for the duration, run the (blocking) picker, then restore both.
-    private func presentPicker(_ body: @escaping (LockManager) -> Void) {
+    /// Present an async file picker without the popover dismissing underneath
+    /// it. `.transient` closes the popover the instant the panel takes key
+    /// focus, so we drop to `.applicationDefined` and disarm the outside-click
+    /// monitor while the panel is open, then restore both in the completion.
+    /// The picker uses `begin` (not `runModal`), so the popover's run loop keeps
+    /// spinning and SwiftUI still updates as items are added.
+    ///
+    /// `body` receives the LockManager and a completion it must call when the
+    /// panel finishes.
+    private func presentPicker(_ body: @escaping (LockManager, @escaping () -> Void) -> Void) {
         isPresentingModal = true
         stopMonitoringOutsideClicks()
         popover.behavior = .applicationDefined
 
-        body(lockManager)
-
-        popover.behavior = .transient
-        isPresentingModal = false
-        // Re-arm only if the popover is still on screen after the picker.
-        if popover.isShown {
-            popover.contentViewController?.view.window?.makeKey()
-            startMonitoringOutsideClicks()
+        body(lockManager) { [weak self] in
+            guard let self else { return }
+            self.popover.behavior = .transient
+            self.isPresentingModal = false
+            // Re-arm only if the popover is still on screen after the picker.
+            if self.popover.isShown {
+                self.popover.contentViewController?.view.window?.makeKey()
+                self.startMonitoringOutsideClicks()
+            }
         }
     }
 
@@ -167,6 +178,12 @@ final class StatusItemController: NSObject {
         closePopover()
         permissions.refreshAll()
         onShowOnboarding?()
+    }
+
+    /// Gear button → the real Settings window (password, face unlock, kill switch).
+    private func showSettings() {
+        closePopover()
+        settingsWindow.present()
     }
 
     private func quit() {
