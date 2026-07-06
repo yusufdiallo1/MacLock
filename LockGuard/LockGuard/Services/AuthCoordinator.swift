@@ -122,7 +122,7 @@ final class AuthCoordinator: ObservableObject {
         )
 
         let hosting = NSHostingController(rootView: root)
-        let window = GateWindow(contentViewController: hosting)
+        let window = GateKeyableWindow(contentViewController: hosting)
         window.styleMask = [.borderless]
         window.isOpaque = false
         window.backgroundColor = .clear
@@ -142,7 +142,7 @@ final class AuthCoordinator: ObservableObject {
     /// cancel, re-entrant presentGate, and any external teardown — always
     /// resolves so `requireAuth` can never hang.
     func dismissGate(resolveWith success: Bool = false) {
-        if let window = gateWindow as? GateWindow { window.onClose = nil }
+        if let window = gateWindow as? GateKeyableWindow { window.onClose = nil }
         gateWindow?.orderOut(nil)
         gateWindow = nil
         FaceAuthService.shared.cancel()
@@ -233,9 +233,3 @@ final class AuthCoordinator: ObservableObject {
     }
 }
 
-/// A borderless auth window that reports when it closes for any reason, so the
-/// coordinator can always resolve its pending continuation (never a hang).
-private final class GateWindow: NSWindow {
-    var onClose: (() -> Void)?
-    override func close() { onClose?(); onClose = nil; super.close() }
-}

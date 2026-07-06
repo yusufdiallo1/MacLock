@@ -96,7 +96,10 @@ final class WindowOverlayService {
         targetPID: pid_t,
         isFullScreenFallback: Bool
     ) -> NSWindow {
-        let window = NSWindow(
+        // KeyableWindow (not plain NSWindow) so the password field can be typed
+        // into and buttons take keyboard focus — borderless windows otherwise
+        // refuse to become key.
+        let window = KeyableWindow(
             contentRect: frame,
             styleMask: .borderless,
             backing: .buffered,

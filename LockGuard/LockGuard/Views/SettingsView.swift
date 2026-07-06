@@ -93,6 +93,7 @@ struct SettingsView: View {
             .foregroundStyle(tab == t ? Theme.ink : Theme.inkMuted)
             .padding(.horizontal, 12).padding(.vertical, 9)
             .background(RoundedRectangle(cornerRadius: 8).fill(tab == t ? Theme.accent.opacity(0.22) : .clear))
+            .contentShape(Rectangle())   // make the whole row clickable
             .padding(.horizontal, 9)
         }
         .buttonStyle(.plain).focusable(false)

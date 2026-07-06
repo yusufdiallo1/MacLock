@@ -110,39 +110,15 @@ final class StatusItemController: NSObject {
         return image
     }
 
-    /// The full menu-bar image: the lock symbol plus a status dot.
-    /// Green = active (armed, nothing pending). Red = a locked app is pending
-    /// authentication. The dot is drawn in color, so the composite is NOT a
-    /// template image (the lock glyph still adapts via `.currentControlTint`).
-    private func composedImage(symbolName: String, dot: NSColor?) -> NSImage? {
-        guard let lock = lockImage(symbolName: symbolName) else { return nil }
-        guard let dot else { return lock }   // no dot → plain template lock
-
-        let size = NSSize(width: lock.size.width + 5, height: lock.size.height + 3)
-        let composed = NSImage(size: size)
-        composed.lockFocus()
-        // Draw the lock as a template tinted to the menu-bar text color.
-        let lockRect = NSRect(x: 0, y: 0, width: lock.size.width, height: lock.size.height)
-        NSColor.labelColor.set()
-        lock.draw(in: lockRect)
-        lockRect.fill(using: .sourceAtop)   // tint the template glyph
-        // Status dot at the top-right.
-        let d: CGFloat = 6
-        let dotRect = NSRect(x: size.width - d, y: size.height - d, width: d, height: d)
-        dot.setFill()
-        NSBezierPath(ovalIn: dotRect).fill()
-        composed.unlockFocus()
-        composed.isTemplate = false
-        return composed
-    }
-
     private func updateAppearance() {
         guard let button = statusItem.button else { return }
-        let armed = permissions.allGranted
-        let symbol = armed ? "lock.shield" : "lock.open"
-        // Dot: red if auth pending, green if armed & active, none during setup.
-        let dot: NSColor? = authPending ? .systemRed : (armed ? .systemGreen : nil)
-        button.image = composedImage(symbolName: symbol, dot: dot)
+        // Clean template glyph — matches the face-scan logo, auto light/dark.
+        // The face-scan symbol when armed; a plain lock during setup.
+        let symbol = permissions.allGranted ? "faceid" : "lock.open"
+        button.image = lockImage(symbolName: symbol)
+        // A subtle colored tint on the whole (template) glyph conveys state
+        // without an awkward composited dot: red = auth pending.
+        button.contentTintColor = authPending ? .systemRed : nil
     }
 
     /// Spring "lock closing" animation: a quick squash-and-settle on the button
