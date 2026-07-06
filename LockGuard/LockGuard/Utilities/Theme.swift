@@ -27,6 +27,23 @@ enum Theme {
 
     // Pending / steel — the not-yet-armed state.
     static let steel      = Color(hex: 0x5B6170)
+
+    // MARK: - Liquid Glass
+
+    // The frosted popover reads as glass over a dark scene rather than a solid
+    // panel. These tokens layer on top of `.ultraThinMaterial` (or the native
+    // `.glassEffect` on macOS 26+) to give it edge highlights and depth.
+
+    /// Faint top-edge highlight where light catches the glass rim.
+    static let glassHighlight = Color.white.opacity(0.16)
+    /// Hairline that traces the glass edge, darker on the bottom.
+    static let glassEdge      = Color.white.opacity(0.08)
+    /// Tint washed over the material so it stays in the graphite family.
+    static let glassTint      = Color(hex: 0x1C1E26).opacity(0.28)
+    /// Fill for a row when hovered — a brighter frost, not a solid block.
+    static let rowHover       = Color.white.opacity(0.06)
+    /// Fill behind an item's icon so it sits on a small chip of glass.
+    static let iconWell       = Color.white.opacity(0.05)
 }
 
 extension Color {

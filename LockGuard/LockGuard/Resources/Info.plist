@@ -24,7 +24,7 @@
 	<true/>
 
 	<key>LSMinimumSystemVersion</key>
-	<string>14.0</string>
+	<string>26.0</string>
 
 	<!-- Permission usage strings, written from the user's side of the screen. -->
 	<key>NSCameraUsageDescription</key>
