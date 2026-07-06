@@ -53,6 +53,29 @@ final class BehaviorSettings: ObservableObject {
         didSet { UserDefaults.standard.set(touchIDEnabled, forKey: "LG.touchID") }
     }
 
+    /// How the session-timeout timer counts (reference "Timer Mode").
+    enum TimerMode: String, CaseIterable, Identifiable {
+        case fromLastUnlock, afterInactivity
+        var id: String { rawValue }
+        var label: String {
+            switch self {
+            case .fromLastUnlock:  return "From last unlock"
+            case .afterInactivity: return "After inactivity"
+            }
+        }
+    }
+    @Published var timerMode: TimerMode {
+        didSet { UserDefaults.standard.set(timerMode.rawValue, forKey: "LG.timerMode") }
+    }
+    /// Start LockGuard at login (SMAppService).
+    @Published var launchAtLogin: Bool {
+        didSet { UserDefaults.standard.set(launchAtLogin, forKey: "LG.launchAtLogin") }
+    }
+    /// App Deletion Protection — mirrors whether the LaunchAgent is installed.
+    @Published var deletionProtectionEnabled: Bool {
+        didSet { UserDefaults.standard.set(deletionProtectionEnabled, forKey: "LG.deletionProtection") }
+    }
+
     private init() {
         let d = UserDefaults.standard
         sessionTimeoutMinutes = d.object(forKey: "LG.sessionTimeout") as? Double ?? 5
@@ -64,6 +87,9 @@ final class BehaviorSettings: ObservableObject {
         faceStartMinutes = d.object(forKey: "LG.faceSchedStart") as? Double ?? (9 * 60)
         faceEndMinutes = d.object(forKey: "LG.faceSchedEnd") as? Double ?? (17 * 60)
         touchIDEnabled = d.bool(forKey: "LG.touchID")
+        timerMode = TimerMode(rawValue: d.string(forKey: "LG.timerMode") ?? "") ?? .fromLastUnlock
+        launchAtLogin = d.bool(forKey: "LG.launchAtLogin")
+        deletionProtectionEnabled = d.bool(forKey: "LG.deletionProtection")
     }
 
     /// Whether this Mac actually has Touch ID / biometrics available.

@@ -173,11 +173,14 @@ final class StatusItemController: NSObject {
         onShowOnboarding?()
     }
 
-    /// Gear button → the real Settings window (password, face unlock, kill switch).
+    /// Gear button → authenticate, then open the real Settings window.
     private func showSettings() {
-        NSLog("LockGuard[DEBUG]: gear tapped → showSettings() → presenting Settings window")
         closePopover()
-        settingsWindow.present()
+        Task {
+            if await AuthCoordinator.shared.requireAuth(reason: "Authenticate to open Settings") {
+                settingsWindow.present()
+            }
+        }
     }
 
     private func quit() {

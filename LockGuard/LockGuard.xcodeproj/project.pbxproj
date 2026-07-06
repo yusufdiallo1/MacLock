@@ -41,6 +41,7 @@
 		AA0000000000000000000123 /* AuthCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000023 /* AuthCoordinator.swift */; };
 		AA0000000000000000000124 /* AuthGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000024 /* AuthGateView.swift */; };
 		AA0000000000000000000125 /* AuthLogService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000025 /* AuthLogService.swift */; };
+		AA0000000000000000000126 /* LaunchAgentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000026 /* LaunchAgentService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -80,6 +81,7 @@
 		AA0000000000000000000023 /* AuthCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthCoordinator.swift; sourceTree = "<group>"; };
 		AA0000000000000000000024 /* AuthGateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthGateView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000025 /* AuthLogService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthLogService.swift; sourceTree = "<group>"; };
+		AA0000000000000000000026 /* LaunchAgentService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAgentService.swift; sourceTree = "<group>"; };
 		AA00000000000000000000FF /* LockGuard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LockGuard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -161,6 +163,7 @@
 				AA0000000000000000000022 /* BehaviorSettings.swift */,
 				AA0000000000000000000023 /* AuthCoordinator.swift */,
 				AA0000000000000000000025 /* AuthLogService.swift */,
+				AA0000000000000000000026 /* LaunchAgentService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -295,6 +298,7 @@
 				AA0000000000000000000123 /* AuthCoordinator.swift in Sources */,
 				AA0000000000000000000124 /* AuthGateView.swift in Sources */,
 				AA0000000000000000000125 /* AuthLogService.swift in Sources */,
+				AA0000000000000000000126 /* LaunchAgentService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
