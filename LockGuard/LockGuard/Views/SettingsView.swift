@@ -2,326 +2,484 @@
 //  SettingsView.swift
 //  LockGuard
 //
-//  The real Settings window (opened by the popover's gear button). Groups the
-//  master password, face-unlock sensitivity + enrollment, and the emergency
-//  kill switch. Matches the graphite/amber Theme.
+//  The Settings window (gear button). A Liquid Glass sidebar with three tabs:
+//  Locked Apps, Authentication, and Behavior — each a clean Form of rows with
+//  purple controls, on the graphite Theme.
 //
 
 import SwiftUI
+import AVFoundation
 
 struct SettingsView: View {
     @ObservedObject var password: PasswordAuthService
     @ObservedObject var face: FaceAuthService
     let onClose: () -> Void
 
-    enum Tab: String, CaseIterable {
-        case password = "Password"
-        case face = "Face Unlock"
-        case security = "Security"
+    @StateObject private var lockManager = LockManager.shared
+    @StateObject private var behavior = BehaviorSettings.shared
+
+    enum Tab: String, CaseIterable, Identifiable {
+        case apps = "Locked Apps"
+        case auth = "Authentication"
+        case behavior = "Behavior"
+        var id: String { rawValue }
         var symbol: String {
             switch self {
-            case .password: return "key.fill"
-            case .face:     return "faceid"
-            case .security: return "exclamationmark.shield.fill"
+            case .apps:     return "square.grid.2x2.fill"
+            case .auth:     return "faceid"
+            case .behavior: return "slider.horizontal.3"
             }
         }
     }
-    @State private var tab: Tab = .password
+    @State private var tab: Tab = .apps
+
+    static let accent = Color(hex: 0x8B7CF6)
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            header
-            tabBar
+        HStack(spacing: 0) {
+            sidebar
             Divider().overlay(Theme.hairline)
-            ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
-                    switch tab {
-                    case .password: PasswordSection(password: password)
-                    case .face:     FaceSection(face: face)
-                    case .security: KillSwitchSection(password: password)
-                    }
-                }
-                .padding(24)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
+            content
         }
-        .frame(width: 460, height: 560)
+        .frame(width: 620, height: 560)
         .background(Theme.ground)
     }
 
-    private var tabBar: some View {
-        HStack(spacing: 6) {
-            ForEach(Tab.allCases, id: \.self) { t in
-                Button { tab = t } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: t.symbol).font(.system(size: 11, weight: .semibold))
-                        Text(t.rawValue).font(.system(size: 12, weight: .medium))
-                    }
-                    .foregroundStyle(tab == t ? Theme.ground : Theme.inkMuted)
-                    .padding(.horizontal, 12).padding(.vertical, 7)
-                    .background(
-                        Capsule().fill(tab == t ? Theme.signal : Theme.surface)
-                    )
-                }
-                .buttonStyle(.plain)
-                .focusable(false)
-            }
-            Spacer()
-        }
-        .padding(.horizontal, 20)
-        .padding(.bottom, 14)
-    }
+    // MARK: - Liquid Glass sidebar
 
-    private var header: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "gearshape.fill")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(Theme.signal)
-            Text("LockGuard Settings")
-                .font(.system(size: 17, weight: .bold, design: .rounded))
-                .foregroundStyle(Theme.ink)
+    private var sidebar: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 9) {
+                Image(systemName: "lock.shield.fill")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Self.accent)
+                Text("LockGuard")
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundStyle(Theme.ink)
+            }
+            .padding(.horizontal, 14).padding(.top, 18).padding(.bottom, 14)
+
+            ForEach(Tab.allCases) { t in
+                sidebarItem(t)
+            }
             Spacer()
             Button(action: onClose) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(Theme.inkMuted)
-                    .frame(width: 26, height: 26)
-                    .background(Circle().fill(Theme.surface))
+                HStack(spacing: 8) {
+                    Image(systemName: "xmark.circle.fill").font(.system(size: 13))
+                    Text("Close").font(.system(size: 12.5, weight: .medium))
+                }
+                .foregroundStyle(Theme.inkMuted)
+                .padding(.horizontal, 12).padding(.vertical, 8)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.plain).focusable(false)
             .keyboardShortcut(.cancelAction)
+            .padding(.bottom, 12)
         }
-        .padding(20)
+        .frame(width: 176)
+        .background(.ultraThinMaterial)
+        .overlay(Theme.glassTint)
     }
-}
 
-// MARK: - Section chrome
-
-private struct SectionHeader: View {
-    let symbol: String
-    let title: String
-    let subtitle: String
-    var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            Image(systemName: symbol)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(Theme.signal)
-                .frame(width: 22)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Theme.ink)
-                Text(subtitle)
-                    .font(.system(size: 11.5))
-                    .foregroundStyle(Theme.inkMuted)
-                    .fixedSize(horizontal: false, vertical: true)
+    private func sidebarItem(_ t: Tab) -> some View {
+        Button { tab = t } label: {
+            HStack(spacing: 10) {
+                Image(systemName: t.symbol)
+                    .font(.system(size: 13, weight: .medium))
+                    .frame(width: 20)
+                Text(t.rawValue).font(.system(size: 13, weight: .medium))
+                Spacer()
             }
+            .foregroundStyle(tab == t ? Theme.ink : Theme.inkMuted)
+            .padding(.horizontal, 12).padding(.vertical, 9)
+            .background(
+                RoundedRectangle(cornerRadius: 9)
+                    .fill(tab == t ? Self.accent.opacity(0.22) : .clear)
+            )
+            .padding(.horizontal, 8)
+        }
+        .buttonStyle(.plain).focusable(false)
+    }
+
+    // MARK: - Content
+
+    @ViewBuilder
+    private var content: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                switch tab {
+                case .apps:     LockedAppsTab(lockManager: lockManager)
+                case .auth:     AuthTab(password: password, face: face, behavior: behavior)
+                case .behavior: BehaviorTab(password: password, behavior: behavior)
+                }
+            }
+            .padding(24)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
 
-private struct StatusNote: View {
+// MARK: - Shared row chrome
+
+struct SettingsRow<Trailing: View>: View {
+    let title: String
+    var subtitle: String? = nil
+    @ViewBuilder var trailing: () -> Trailing
+    var body: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.system(size: 13, weight: .medium)).foregroundStyle(Theme.ink)
+                if let subtitle {
+                    Text(subtitle).font(.system(size: 11)).foregroundStyle(Theme.inkMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            Spacer(minLength: 12)
+            trailing()
+        }
+        .padding(.vertical, 9)
+    }
+}
+
+struct TabTitle: View {
     let text: String
-    let good: Bool
     var body: some View {
         Text(text)
-            .font(.system(size: 11.5, weight: .medium))
-            .foregroundStyle(good ? Theme.signal : Color(hex: 0xE07A6B))
+            .font(.system(size: 18, weight: .bold, design: .rounded))
+            .foregroundStyle(Theme.ink)
+            .padding(.bottom, 8)
     }
 }
 
-// MARK: - Password
+// MARK: - Tab 1: Locked Apps
 
-private struct PasswordSection: View {
+private struct LockedAppsTab: View {
+    @ObservedObject var lockManager: LockManager
+    @State private var showPicker = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                TabTitle(text: "Locked Apps")
+                Spacer()
+                Button { showPicker = true } label: {
+                    Label("Add Apps", systemImage: "plus")
+                        .font(.system(size: 12.5, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12).padding(.vertical, 6)
+                        .background(Capsule().fill(SettingsView.accent))
+                }
+                .buttonStyle(.plain).focusable(false)
+            }
+
+            if lockManager.apps.isEmpty {
+                emptyState
+            } else {
+                ForEach(lockManager.apps) { item in
+                    appRow(item)
+                    Divider().overlay(Theme.hairline)
+                }
+            }
+        }
+        .sheet(isPresented: $showPicker) {
+            InstalledAppsPicker(lockManager: lockManager) { showPicker = false }
+        }
+    }
+
+    private func appRow(_ item: LockedItem) -> some View {
+        HStack(spacing: 12) {
+            Image(nsImage: item.icon).resizable().frame(width: 30, height: 30)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(item.name).font(.system(size: 13, weight: .medium)).foregroundStyle(Theme.ink)
+                Text(item.url.deletingLastPathComponent().path)
+                    .font(.system(size: 10.5)).foregroundStyle(Theme.inkFaint).lineLimit(1)
+            }
+            Spacer()
+            // Locked toggle
+            Toggle("", isOn: Binding(
+                get: { item.isLocked },
+                set: { lockManager.setLocked($0, for: item) }
+            ))
+            .labelsHidden().toggleStyle(.switch).tint(SettingsView.accent)
+            // Remove
+            Button { lockManager.remove(item) } label: {
+                Image(systemName: "trash").font(.system(size: 12))
+                    .foregroundStyle(Color(hex: 0xE0675A))
+            }
+            .buttonStyle(.plain).focusable(false)
+        }
+        .padding(.vertical, 7)
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "square.grid.2x2")
+                .font(.system(size: 28)).foregroundStyle(Theme.steel)
+            Text("No apps locked yet").font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.ink)
+            Text("Add apps to require authentication when they're opened.")
+                .font(.system(size: 11.5)).foregroundStyle(Theme.inkMuted).multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity).padding(.vertical, 40)
+    }
+}
+
+/// Installed-apps picker sheet for the Locked Apps tab.
+private struct InstalledAppsPicker: View {
+    @ObservedObject var lockManager: LockManager
+    let onDone: () -> Void
+    @State private var apps: [PickableItem] = []
+    @State private var query = ""
+
+    private var filtered: [PickableItem] {
+        query.isEmpty ? apps : apps.filter { $0.name.localizedCaseInsensitiveContains(query) }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("Add Apps to Lock").font(.system(size: 14, weight: .bold, design: .rounded))
+                    .foregroundStyle(Theme.ink)
+                Spacer()
+                Button("Done", action: onDone).focusable(false)
+            }
+            .padding(16)
+            HStack(spacing: 7) {
+                Image(systemName: "magnifyingglass").font(.system(size: 11)).foregroundStyle(Theme.inkFaint)
+                TextField("Search", text: $query).textFieldStyle(.plain).font(.system(size: 12.5))
+            }
+            .padding(.horizontal, 10).padding(.vertical, 7)
+            .background(RoundedRectangle(cornerRadius: 8).fill(Theme.surface))
+            .padding(.horizontal, 16).padding(.bottom, 8)
+            Divider().overlay(Theme.hairline)
+            ScrollView {
+                LazyVStack(spacing: 2) {
+                    ForEach(filtered) { app in
+                        Button { lockManager.lockPickedApp(app) } label: {
+                            HStack(spacing: 11) {
+                                Image(nsImage: app.icon).resizable().frame(width: 24, height: 24)
+                                Text(app.name).font(.system(size: 13)).foregroundStyle(Theme.ink)
+                                Spacer()
+                                Image(systemName: lockManager.isAppLocked(app) ? "checkmark.circle.fill" : "plus.circle")
+                                    .foregroundStyle(lockManager.isAppLocked(app) ? SettingsView.accent : Theme.inkFaint)
+                            }
+                            .padding(.horizontal, 10).padding(.vertical, 6)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain).focusable(false)
+                    }
+                }
+                .padding(8)
+            }
+        }
+        .frame(width: 380, height: 440)
+        .background(Theme.ground)
+        .onAppear { if apps.isEmpty { apps = InstalledItems.installedApps() } }
+    }
+}
+
+// MARK: - Tab 2: Authentication
+
+private struct AuthTab: View {
     @ObservedObject var password: PasswordAuthService
+    @ObservedObject var face: FaceAuthService
+    @ObservedObject var behavior: BehaviorSettings
 
+    @State private var currentPass = ""
     @State private var newPass = ""
     @State private var confirmPass = ""
-    @State private var currentPass = ""
     @State private var note: (String, Bool)?
+    @State private var cameras: [AVCaptureDevice] = []
+    @State private var selectedCamera = ""
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(
-                symbol: "key.fill",
-                title: "Master Password",
-                subtitle: password.isPasswordSet
-                    ? "Used to unlock when face isn't available, and during the kill switch."
-                    : "Set a password so you can always unlock, even without your face."
-            )
+        VStack(alignment: .leading, spacing: 18) {
+            TabTitle(text: "Authentication")
 
-            if password.isPasswordSet {
-                SecureField("Current password", text: $currentPass)
-                    .textFieldStyle(GlassFieldStyle())
+            // Face
+            group("Face Unlock") {
+                SettingsRow(title: face.isEnrolled ? "Face is enrolled" : "No face enrolled",
+                            subtitle: "A presence gate — captured from multiple angles.") {
+                    HStack(spacing: 8) {
+                        Button(face.isEnrolled ? "Re-enroll" : "Set Up") {
+                            EnrollWindowController.shared.present()
+                        }.focusable(false)
+                        if face.isEnrolled {
+                            Button("Remove") { face.removeEnrollment() }.focusable(false)
+                        }
+                    }
+                }
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack { Text("Sensitivity").font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.ink)
+                        Spacer(); Text(sensitivityLabel).font(.system(size: 11)).foregroundStyle(Theme.inkMuted) }
+                    Slider(value: $face.sensitivity, in: 0.5...0.95).tint(SettingsView.accent)
+                    HStack { Text("Permissive").font(.system(size: 10)).foregroundStyle(Theme.inkFaint)
+                        Spacer(); Text("Strict").font(.system(size: 10)).foregroundStyle(Theme.inkFaint) }
+                }
+                if cameras.count > 1 {
+                    SettingsRow(title: "Camera", subtitle: "Choose which camera to use.") {
+                        Picker("", selection: $selectedCamera) {
+                            ForEach(cameras, id: \.uniqueID) { Text($0.localizedName).tag($0.uniqueID) }
+                        }.labelsHidden().frame(width: 160)
+                    }
+                }
             }
-            SecureField(password.isPasswordSet ? "New password" : "Password", text: $newPass)
-                .textFieldStyle(GlassFieldStyle())
-            SecureField("Confirm password", text: $confirmPass)
-                .textFieldStyle(GlassFieldStyle())
 
-            if let note {
-                StatusNote(text: note.0, good: note.1)
+            // Touch ID
+            group("Touch ID") {
+                SettingsRow(title: "Allow Touch ID",
+                            subtitle: behavior.biometricsAvailable
+                                ? "Use your fingerprint as an unlock method."
+                                : "No Touch ID hardware detected on this Mac.") {
+                    Toggle("", isOn: $behavior.touchIDEnabled)
+                        .labelsHidden().toggleStyle(.switch).tint(SettingsView.accent)
+                        .disabled(!behavior.biometricsAvailable)
+                }
             }
 
-            Button(action: submit) {
-                Text(password.isPasswordSet ? "Change Password" : "Set Password")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Theme.ground)
-                    .padding(.horizontal, 18)
-                    .padding(.vertical, 8)
-                    .background(Capsule().fill(Theme.signal))
+            // Password
+            group(password.isPasswordSet ? "Change Password" : "Set Password") {
+                if password.isPasswordSet {
+                    SecureField("Current password", text: $currentPass).textFieldStyle(FieldStyle())
+                }
+                SecureField(password.isPasswordSet ? "New password" : "Password", text: $newPass).textFieldStyle(FieldStyle())
+                SecureField("Confirm password", text: $confirmPass).textFieldStyle(FieldStyle())
+                if let note { Text(note.0).font(.system(size: 11.5, weight: .medium))
+                    .foregroundStyle(note.1 ? SettingsView.accent : Color(hex: 0xE0675A)) }
+                Button(action: submitPassword) {
+                    Text(password.isPasswordSet ? "Change Password" : "Set Password")
+                        .font(.system(size: 13, weight: .semibold, design: .rounded)).foregroundStyle(.white)
+                        .padding(.horizontal, 16).padding(.vertical, 8)
+                        .background(Capsule().fill(SettingsView.accent))
+                }.buttonStyle(.plain).focusable(false)
             }
-            .buttonStyle(.plain)
+        }
+        .onAppear {
+            cameras = AVCaptureDevice.DiscoverySession(
+                deviceTypes: [.builtInWideAngleCamera, .externalUnknown],
+                mediaType: .video, position: .unspecified).devices
+            selectedCamera = cameras.first?.uniqueID ?? ""
         }
     }
 
-    private func submit() {
-        let result: PasswordAuthService.PasswordResult
-        if password.isPasswordSet {
-            result = password.changePassword(current: currentPass, new: newPass, confirm: confirmPass)
-        } else {
-            result = password.setPassword(newPass, confirm: confirmPass)
-        }
-        switch result {
-        case .success:
-            note = (password.isPasswordSet ? "Password changed." : "Password set.", true)
-            newPass = ""; confirmPass = ""; currentPass = ""
-        case .mismatch:     note = ("The two passwords don't match.", false)
-        case .tooShort:     note = ("Use at least \(PasswordAuthService.minimumLength) characters.", false)
-        case .wrongCurrent: note = ("Current password is incorrect.", false)
-        case .notSet:       note = ("No password is set yet.", false)
-        case .storageFailed: note = ("Couldn't save to the Keychain. Try again.", false)
-        }
-    }
-}
-
-// MARK: - Face
-
-private struct FaceSection: View {
-    @ObservedObject var face: FaceAuthService
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(
-                symbol: "faceid",
-                title: "Face Unlock",
-                subtitle: "Recognizes you at the camera. A presence gate — not a replacement for your password."
-            )
-
-            HStack {
-                Text(face.isEnrolled ? "Face is enrolled" : "No face enrolled")
-                    .font(.system(size: 12.5))
-                    .foregroundStyle(face.isEnrolled ? Theme.signal : Theme.inkMuted)
-                Spacer()
-                if face.isEnrolled {
-                    Button("Re-enroll") { EnrollWindowController.shared.present() }
-                        .buttonStyle(GlassButtonStyle())
-                    Button("Remove") { face.removeEnrollment() }
-                        .buttonStyle(GlassButtonStyle())
-                } else {
-                    Button("Set Up Face Unlock") { EnrollWindowController.shared.present() }
-                        .buttonStyle(GlassButtonStyle())
-                }
-            }
-
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text("Sensitivity")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(Theme.ink)
-                    Spacer()
-                    Text(sensitivityLabel)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(Theme.inkMuted)
-                }
-                Slider(value: $face.sensitivity, in: 0.5...0.95)
-                    .tint(Theme.signal)
-                HStack {
-                    Text("Permissive").font(.system(size: 10)).foregroundStyle(Theme.inkFaint)
-                    Spacer()
-                    Text("Strict").font(.system(size: 10)).foregroundStyle(Theme.inkFaint)
-                }
-            }
+    @ViewBuilder private func group<C: View>(_ title: String, @ViewBuilder _ content: () -> C) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title.uppercased()).font(.system(size: 10, weight: .semibold)).tracking(0.6)
+                .foregroundStyle(Theme.inkFaint)
+            content()
         }
     }
 
     private var sensitivityLabel: String {
         switch face.sensitivity {
-        case ..<0.62: return "Permissive"
-        case ..<0.78: return "Balanced"
-        case ..<0.9:  return "Strict"
-        default:      return "Very strict"
+        case ..<0.62: return "Permissive"; case ..<0.78: return "Balanced"
+        case ..<0.9: return "Strict"; default: return "Very strict" }
+    }
+
+    private func submitPassword() {
+        let r: PasswordAuthService.PasswordResult = password.isPasswordSet
+            ? password.changePassword(current: currentPass, new: newPass, confirm: confirmPass)
+            : password.setPassword(newPass, confirm: confirmPass)
+        switch r {
+        case .success: note = ("Saved.", true); currentPass = ""; newPass = ""; confirmPass = ""
+        case .mismatch: note = ("Passwords don't match.", false)
+        case .tooShort: note = ("Use at least \(PasswordAuthService.minimumLength) characters.", false)
+        case .wrongCurrent: note = ("Current password is incorrect.", false)
+        case .notSet: note = ("No password set yet.", false)
+        case .storageFailed: note = ("Couldn't save to Keychain.", false)
         }
     }
 }
 
-// MARK: - Kill switch
+// MARK: - Tab 3: Behavior
 
-private struct KillSwitchSection: View {
+private struct BehaviorTab: View {
     @ObservedObject var password: PasswordAuthService
+    @ObservedObject var behavior: BehaviorSettings
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            SectionHeader(
-                symbol: "exclamationmark.shield.fill",
-                title: "Emergency Kill Switch",
-                subtitle: "Instantly locks everything and disables face unlock for 60 seconds — only your password unlocks."
-            )
-            HStack(spacing: 8) {
-                ForEach(["control", "option", "shift", "delete.left"], id: \.self) { key in
-                    Image(systemName: keySymbol(key))
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(Theme.ink)
-                        .frame(width: 30, height: 26)
-                        .background(RoundedRectangle(cornerRadius: 7).fill(Theme.surface))
+        VStack(alignment: .leading, spacing: 18) {
+            TabTitle(text: "Behavior")
+
+            group("Auto-Lock") {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack { Text("Session timeout").font(.system(size: 13, weight: .medium)).foregroundStyle(Theme.ink)
+                        Spacer()
+                        Text(behavior.sessionTimeoutMinutes < 1 ? "Never"
+                             : "\(Int(behavior.sessionTimeoutMinutes)) min")
+                            .font(.system(size: 12)).foregroundStyle(Theme.inkMuted) }
+                    Slider(value: $behavior.sessionTimeoutMinutes, in: 0...31, step: 1).tint(SettingsView.accent)
+                    Text("Lock after this much inactivity.").font(.system(size: 11)).foregroundStyle(Theme.inkFaint)
+                }
+                SettingsRow(title: "Lock on sleep", subtitle: "Lock everything when the Mac sleeps.") {
+                    Toggle("", isOn: $behavior.lockOnSleep).labelsHidden().toggleStyle(.switch).tint(SettingsView.accent)
                 }
             }
-            if password.killSwitchActive {
-                StatusNote(text: "Active — face unlock disabled for \(password.killSwitchSecondsRemaining)s.", good: false)
+
+            group("Scheduled Lock") {
+                SettingsRow(title: "Lock on a schedule", subtitle: "Auto-lock during a daily time window.") {
+                    Toggle("", isOn: $behavior.scheduledLockEnabled).labelsHidden().toggleStyle(.switch).tint(SettingsView.accent)
+                }
+                if behavior.scheduledLockEnabled {
+                    timeRange("From", $behavior.scheduledStartMinutes)
+                    timeRange("Until", $behavior.scheduledEndMinutes)
+                }
+            }
+
+            group("Face Unlock Schedule") {
+                SettingsRow(title: "Limit face unlock to hours",
+                            subtitle: "Outside these hours, only your password unlocks.") {
+                    Toggle("", isOn: $behavior.faceScheduleEnabled).labelsHidden().toggleStyle(.switch).tint(SettingsView.accent)
+                }
+                if behavior.faceScheduleEnabled {
+                    timeRange("From", $behavior.faceStartMinutes)
+                    timeRange("Until", $behavior.faceEndMinutes)
+                }
+            }
+
+            group("Emergency Kill Switch") {
+                SettingsRow(title: "Shortcut",
+                            subtitle: "Instantly locks everything and disables face unlock for 60s.") {
+                    HStack(spacing: 6) {
+                        ForEach(["control", "option", "shift", "delete.left"], id: \.self) { s in
+                            Image(systemName: s).font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.ink)
+                                .frame(width: 26, height: 24)
+                                .background(RoundedRectangle(cornerRadius: 6).fill(Theme.surface))
+                        }
+                    }
+                }
+                if password.killSwitchActive {
+                    Text("Active — \(password.killSwitchSecondsRemaining)s remaining")
+                        .font(.system(size: 11.5, weight: .medium)).foregroundStyle(Color(hex: 0xE0675A))
+                }
             }
         }
     }
 
-    private func keySymbol(_ key: String) -> String {
-        switch key {
-        case "control": return "control"
-        case "option":  return "option"
-        case "shift":   return "shift"
-        default:        return "delete.left"
+    private func timeRange(_ label: String, _ value: Binding<Double>) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack { Text(label).font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.ink)
+                Spacer(); Text(BehaviorSettings.timeLabel(value.wrappedValue))
+                    .font(.system(size: 12, weight: .semibold)).foregroundStyle(SettingsView.accent)
+                    .monospacedDigit() }
+            Slider(value: value, in: 0...1439, step: 15).tint(SettingsView.accent)
+        }
+    }
+
+    @ViewBuilder private func group<C: View>(_ title: String, @ViewBuilder _ content: () -> C) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title.uppercased()).font(.system(size: 10, weight: .semibold)).tracking(0.6)
+                .foregroundStyle(Theme.inkFaint)
+            content()
         }
     }
 }
 
-// MARK: - Small styles
+// MARK: - Field style
 
-private struct GlassFieldStyle: TextFieldStyle {
+private struct FieldStyle: TextFieldStyle {
     func _body(configuration: TextField<Self._Label>) -> some View {
-        configuration
-            .textFieldStyle(.plain)
-            .font(.system(size: 13))
-            .foregroundStyle(Theme.ink)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 9)
-            .background(
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
-                    .fill(Theme.surface)
-                    .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(Theme.hairline, lineWidth: 1))
-            )
-    }
-}
-
-private struct GlassButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: 12, weight: .semibold))
-            .foregroundStyle(Theme.ink)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Theme.surface)
-                    .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Theme.hairline, lineWidth: 1))
-            )
-            .opacity(configuration.isPressed ? 0.7 : 1)
+        configuration.textFieldStyle(.plain).font(.system(size: 13)).foregroundStyle(Theme.ink)
+            .padding(.horizontal, 12).padding(.vertical, 9)
+            .background(RoundedRectangle(cornerRadius: 9).fill(Theme.surface)
+                .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(Theme.hairline, lineWidth: 1)))
     }
 }

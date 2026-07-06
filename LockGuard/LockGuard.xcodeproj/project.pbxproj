@@ -37,6 +37,7 @@
 		AA000000000000000000011F /* FolderLockService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001F /* FolderLockService.swift */; };
 		AA0000000000000000000120 /* EnrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000020 /* EnrollView.swift */; };
 		AA0000000000000000000121 /* EnrollWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000021 /* EnrollWindowController.swift */; };
+		AA0000000000000000000122 /* BehaviorSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000022 /* BehaviorSettings.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -72,6 +73,7 @@
 		AA000000000000000000001F /* FolderLockService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderLockService.swift; sourceTree = "<group>"; };
 		AA0000000000000000000020 /* EnrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnrollView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000021 /* EnrollWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnrollWindowController.swift; sourceTree = "<group>"; };
+		AA0000000000000000000022 /* BehaviorSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BehaviorSettings.swift; sourceTree = "<group>"; };
 		AA00000000000000000000FF /* LockGuard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LockGuard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -149,6 +151,7 @@
 				AA0000000000000000000019 /* PasswordAuthService.swift */,
 				AA000000000000000000001C /* InstalledItems.swift */,
 				AA000000000000000000001F /* FolderLockService.swift */,
+				AA0000000000000000000022 /* BehaviorSettings.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -279,6 +282,7 @@
 				AA000000000000000000011F /* FolderLockService.swift in Sources */,
 				AA0000000000000000000120 /* EnrollView.swift in Sources */,
 				AA0000000000000000000121 /* EnrollWindowController.swift in Sources */,
+				AA0000000000000000000122 /* BehaviorSettings.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
