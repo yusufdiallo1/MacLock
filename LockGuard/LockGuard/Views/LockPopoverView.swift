@@ -190,7 +190,12 @@ struct LockPopoverView: View {
                     .transition(.opacity.combined(with: .move(edge: .leading)))
                     .contextMenu {
                         Button(role: .destructive) {
-                            withAnimation(spring) { lockManager.remove(item) }
+                            // Face-required: deleting a locked app/folder needs auth.
+                            Task {
+                                if await AuthCoordinator.shared.requireAuth(reason: "Authenticate to remove \(item.name)") {
+                                    withAnimation(spring) { lockManager.remove(item) }
+                                }
+                            }
                         } label: {
                             Label("Stop Guarding", systemImage: "trash")
                         }

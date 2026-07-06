@@ -147,6 +147,7 @@ final class AuthCoordinator: ObservableObject {
 
     func recordSuccess(method: Method, context: String = "") {
         noteActivity()
+        EnforcementService.shared.noteUnlockActivity()   // reset session timer
         failureCount = 0
         faceLockedOut = false
         stopCooldown()

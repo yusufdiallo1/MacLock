@@ -155,6 +155,9 @@ final class AppLockService: ObservableObject {
     /// bundle ID when available so the popover can show its icon. No-op if
     /// already locked.
     func lockApp(bundleID: String, name: String? = nil, path: String? = nil) {
+        // Hardening: LockGuard can never lock itself (would trap the user out
+        // of the one app that unlocks everything).
+        guard bundleID != Bundle.main.bundleIdentifier else { return }
         guard !isLocked(bundleID: bundleID) else { return }
 
         let resolvedPath = path ?? Self.pathForApp(bundleID: bundleID)
@@ -190,6 +193,13 @@ final class AppLockService: ObservableObject {
     /// or was cancelled). Also drops the re-trigger guard so a later activation
     /// of the same app challenges again.
     func clearPending() {
+        pendingApp = nil
+        challengingBundleID = nil
+    }
+
+    /// Re-lock all apps: drop any in-flight challenge state so every locked app
+    /// challenges again on its next activation. Used by sleep / timeout / kill.
+    func relockAll() {
         pendingApp = nil
         challengingBundleID = nil
     }

@@ -21,6 +21,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let passwordAuth = PasswordAuthService.shared
     // Held so its folder watchers live for the app's lifetime.
     private let folderLock = FolderLockService.shared
+    private let enforcement = EnforcementService.shared
     private var killSwitchMonitors: [Any] = []
     private var cancellables = Set<AnyCancellable>()
 
@@ -36,6 +37,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         observeAuthOverlayRequests()
         installKillSwitchHotkey()
+
+        // Hardening enforcement: accessibility-revocation watcher, lock-on-sleep,
+        // session timeout.
+        enforcement.onAccessibilityRevoked = { [weak self] in self?.presentOnboarding() }
+        enforcement.start()
+        // Reflect the persisted launch-at-login preference on disk.
+        LaunchAgentService.shared.setLaunchAtLogin(BehaviorSettings.shared.launchAtLogin)
 
         permissions.refreshAll()
 

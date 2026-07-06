@@ -445,7 +445,11 @@ private struct BehaviorTab: View {
         VStack(alignment: .leading, spacing: 20) {
             GroupLabel(text: "Startup")
             SettingsCard {
-                row("Launch LockGuard at Login", isOn: $behavior.launchAtLogin)
+                HStack { Text("Launch LockGuard at Login").font(.system(size: 13, weight: .medium)).foregroundStyle(Theme.ink); Spacer()
+                    Toggle("", isOn: Binding(
+                        get: { behavior.launchAtLogin },
+                        set: { on in behavior.launchAtLogin = on; LaunchAgentService.shared.setLaunchAtLogin(on) }
+                    )).labelsHidden().toggleStyle(.switch).tint(Theme.accent) }
             }
 
             GroupLabel(text: "Uninstall Protection")

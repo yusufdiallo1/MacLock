@@ -50,6 +50,8 @@ enum InstalledItems {
                 seen.insert(path)
                 let name = (entry as NSString).deletingPathExtension
                 let bundleID = Bundle(url: URL(fileURLWithPath: path))?.bundleIdentifier
+                // Hardening: never offer LockGuard itself as a lockable app.
+                guard bundleID != Bundle.main.bundleIdentifier else { continue }
                 apps.append(PickableItem(path: path, name: name, bundleID: bundleID))
             }
         }
