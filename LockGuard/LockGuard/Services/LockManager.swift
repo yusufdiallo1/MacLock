@@ -2,12 +2,12 @@
 //  LockManager.swift
 //  LockGuard
 //
-//  Source of truth for the set of guarded apps and folders. Persists the set
-//  (paths + locked flags) to UserDefaults, resolves live icons at display time,
-//  and offers a picker to add new items.
+//  The popover's view of what's guarded. Folders are owned here; the app list
+//  is delegated to AppLockService (the single source of truth for locked apps,
+//  keyed by bundle ID) so the popover UI and enforcement never disagree.
 //
-//  Enforcement (actually blocking launches / access) is a separate concern —
-//  this store owns *what* is guarded and *whether* each item is armed.
+//  This store owns *what folders* are guarded and *whether* each is armed;
+//  app locking — including activation-watching — lives in AppLockService.
 //
 
 import AppKit
@@ -17,23 +17,32 @@ import Combine
 final class LockManager: ObservableObject {
     static let shared = LockManager()
 
-    /// Guarded applications, in insertion order.
-    @Published private(set) var apps: [LockedItem] = []
-    /// Guarded folders, in insertion order.
+    /// Guarded folders, in insertion order. Apps live in `appLock`.
     @Published private(set) var folders: [LockedItem] = []
 
-    private let defaultsKey = "LockGuard.lockedItems.v1"
+    private let appLock: AppLockService
+    private let defaultsKey = "LockGuard.lockedFolders.v1"
+    private var cancellables = Set<AnyCancellable>()
 
-    private init() {
+    private init(appLock: AppLockService = .shared) {
+        self.appLock = appLock
         load()
+        // Re-publish when the app list changes so the popover refreshes.
+        appLock.$lockedApps
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
     }
 
     // MARK: - Derived state
+
+    /// Guarded applications, projected from AppLockService.
+    var apps: [LockedItem] { appLock.lockedItems }
 
     /// Every guarded item, apps first.
     var allItems: [LockedItem] { apps + folders }
 
     /// True when at least one item exists and every one of them is locked.
+    /// Apps are always locked while present, so this reduces to the folders.
     var everythingLocked: Bool {
         let items = allItems
         return !items.isEmpty && items.allSatisfy(\.isLocked)
@@ -44,23 +53,32 @@ final class LockManager: ObservableObject {
 
     // MARK: - Toggling
 
-    /// Flip a single item's locked state and persist.
+    /// Flip a single item's locked state and persist. For apps, "unlocking"
+    /// means removing them from the locked set (presence == locked).
     func toggle(_ item: LockedItem) {
         setLocked(!item.isLocked, for: item)
     }
 
     func setLocked(_ locked: Bool, for item: LockedItem) {
-        if let i = apps.firstIndex(where: { $0.id == item.id }) {
-            apps[i].isLocked = locked
-        } else if let i = folders.firstIndex(where: { $0.id == item.id }) {
-            folders[i].isLocked = locked
+        switch item.kind {
+        case .app:
+            guard let bundleID = item.bundleID else { return }
+            if locked {
+                appLock.lockApp(bundleID: bundleID, name: item.name, path: item.path)
+            } else {
+                appLock.unlockApp(bundleID: bundleID)
+            }
+        case .folder:
+            if let i = folders.firstIndex(where: { $0.id == item.id }) {
+                folders[i].isLocked = locked
+                save()
+            }
         }
-        save()
     }
 
-    /// Arm every guarded item. Backs the "Lock All Now" button.
+    /// Arm every guarded item. Backs the "Lock All Now" button. Apps in the
+    /// list are already locked; this re-arms the folders.
     func lockAll() {
-        for i in apps.indices { apps[i].isLocked = true }
         for i in folders.indices { folders[i].isLocked = true }
         save()
     }
@@ -68,27 +86,20 @@ final class LockManager: ObservableObject {
     // MARK: - Removal
 
     func remove(_ item: LockedItem) {
-        apps.removeAll { $0.id == item.id }
-        folders.removeAll { $0.id == item.id }
-        save()
+        switch item.kind {
+        case .app:
+            if let bundleID = item.bundleID { appLock.unlockApp(bundleID: bundleID) }
+        case .folder:
+            folders.removeAll { $0.id == item.id }
+            save()
+        }
     }
 
     // MARK: - Adding via pickers
 
-    /// Present an open panel scoped to /Applications so the user can pick apps
-    /// to guard. New items start locked. Ignores duplicates.
+    /// Browse /Applications and lock the chosen apps (delegated to AppLockService).
     func presentAddApps() {
-        let panel = NSOpenPanel()
-        panel.title = "Choose Apps to Lock"
-        panel.prompt = "Lock"
-        panel.canChooseFiles = true
-        panel.canChooseDirectories = false
-        panel.allowsMultipleSelection = true
-        panel.allowedContentTypes = [.application]
-        panel.directoryURL = URL(fileURLWithPath: "/Applications")
-
-        guard panel.runModal() == .OK else { return }
-        for url in panel.urls { addApp(at: url) }
+        appLock.presentAddApps()
     }
 
     /// Present an open panel to pick folders to guard. New items start locked.
@@ -104,25 +115,9 @@ final class LockManager: ObservableObject {
         for url in panel.urls { addFolder(at: url) }
     }
 
-    /// True if any guarded item already has this path. `id == path`, so letting
-    /// the same path in twice (e.g. an .app bundle picked as both app and
-    /// folder) would create duplicate SwiftUI ForEach IDs.
-    private func alreadyGuarded(_ path: String) -> Bool {
-        apps.contains { $0.path == path } || folders.contains { $0.path == path }
-    }
-
-    private func addApp(at url: URL) {
-        let path = url.path
-        guard !alreadyGuarded(path) else { return }
-        let name = FileManager.default.displayName(atPath: path)
-            .replacingOccurrences(of: ".app", with: "")
-        apps.append(LockedItem(path: path, name: name, kind: .app, isLocked: true))
-        save()
-    }
-
     private func addFolder(at url: URL) {
         let path = url.path
-        guard !alreadyGuarded(path) else { return }
+        guard !folders.contains(where: { $0.path == path }) else { return }
         let name = FileManager.default.displayName(atPath: path)
         folders.append(LockedItem(path: path, name: name, kind: .folder, isLocked: true))
         save()
@@ -130,16 +125,12 @@ final class LockManager: ObservableObject {
 
     // MARK: - Persistence
 
-    // NOTE: Under the sandbox, access to user-picked files only survives a
-    // relaunch if we persist *security-scoped bookmarks*, not raw paths. We
-    // store paths here so the list and toggles are correct within a session and
-    // across relaunches for items that remain readable; wiring bookmarks (and
-    // start/stopAccessingSecurityScopedResource) is a follow-up for when
-    // enforcement lands. Icons fall back to an SF Symbol if a path is unreadable.
+    // The app runs unsandboxed (see LockGuard.entitlements), so raw paths are
+    // durable identities across launches — no security-scoped bookmarks needed.
+    // Icons fall back to an SF Symbol if a path becomes unreadable.
 
     private func save() {
-        let all = apps + folders
-        guard let data = try? JSONEncoder().encode(all) else { return }
+        guard let data = try? JSONEncoder().encode(folders) else { return }
         UserDefaults.standard.set(data, forKey: defaultsKey)
     }
 
@@ -148,7 +139,6 @@ final class LockManager: ObservableObject {
             let data = UserDefaults.standard.data(forKey: defaultsKey),
             let items = try? JSONDecoder().decode([LockedItem].self, from: data)
         else { return }
-        apps = items.filter { $0.kind == .app }
         folders = items.filter { $0.kind == .folder }
     }
 }

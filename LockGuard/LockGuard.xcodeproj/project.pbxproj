@@ -24,6 +24,7 @@
 		AA0000000000000000000112 /* GlassBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000012 /* GlassBackground.swift */; };
 		AA0000000000000000000113 /* LockRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000013 /* LockRow.swift */; };
 		AA0000000000000000000114 /* LockPopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000014 /* LockPopoverView.swift */; };
+		AA0000000000000000000115 /* AppLockService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000015 /* AppLockService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,6 +47,7 @@
 		AA0000000000000000000012 /* GlassBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassBackground.swift; sourceTree = "<group>"; };
 		AA0000000000000000000013 /* LockRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockRow.swift; sourceTree = "<group>"; };
 		AA0000000000000000000014 /* LockPopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockPopoverView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000015 /* AppLockService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockService.swift; sourceTree = "<group>"; };
 		AA00000000000000000000FF /* LockGuard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LockGuard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -110,6 +112,7 @@
 				AA0000000000000000000007 /* StatusItemController.swift */,
 				AA0000000000000000000008 /* FaceRecognitionService.swift */,
 				AA0000000000000000000011 /* LockManager.swift */,
+				AA0000000000000000000015 /* AppLockService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -227,6 +230,7 @@
 				AA0000000000000000000112 /* GlassBackground.swift in Sources */,
 				AA0000000000000000000113 /* LockRow.swift in Sources */,
 				AA0000000000000000000114 /* LockPopoverView.swift in Sources */,
+				AA0000000000000000000115 /* AppLockService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

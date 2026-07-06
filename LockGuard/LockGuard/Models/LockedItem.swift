@@ -25,9 +25,15 @@ enum LockedItemKind: String, Codable {
 
 /// A single guarded item. Identity is the file-system path, which is stable
 /// across launches and lets us persist the set without storing icons.
+///
+/// Apps also carry a `bundleID`: activation-watching keys off the bundle
+/// identifier (that's the stable identity `NSRunningApplication` exposes),
+/// while the path drives the icon and display name.
 struct LockedItem: Identifiable, Equatable, Codable {
     /// Absolute file-system path — also the stable identity.
     let path: String
+    /// Bundle identifier, for apps. `nil` for folders.
+    let bundleID: String?
     /// Display name (app name or folder name).
     let name: String
     let kind: LockedItemKind
@@ -38,10 +44,18 @@ struct LockedItem: Identifiable, Equatable, Codable {
 
     var url: URL { URL(fileURLWithPath: path) }
 
+    init(path: String, bundleID: String? = nil, name: String, kind: LockedItemKind, isLocked: Bool) {
+        self.path = path
+        self.bundleID = bundleID
+        self.name = name
+        self.kind = kind
+        self.isLocked = isLocked
+    }
+
     // MARK: Codable — icons are resolved at runtime, never persisted.
 
     enum CodingKeys: String, CodingKey {
-        case path, name, kind, isLocked
+        case path, bundleID, name, kind, isLocked
     }
 }
 
