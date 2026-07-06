@@ -16,3 +16,15 @@ npm-debug.log*
 # Editor
 .vscode/
 .idea/
+
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xccheckout
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
