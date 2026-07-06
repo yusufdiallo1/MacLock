@@ -14,23 +14,62 @@ struct SettingsView: View {
     @ObservedObject var face: FaceAuthService
     let onClose: () -> Void
 
+    enum Tab: String, CaseIterable {
+        case password = "Password"
+        case face = "Face Unlock"
+        case security = "Security"
+        var symbol: String {
+            switch self {
+            case .password: return "key.fill"
+            case .face:     return "faceid"
+            case .security: return "exclamationmark.shield.fill"
+            }
+        }
+    }
+    @State private var tab: Tab = .password
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
+            tabBar
             Divider().overlay(Theme.hairline)
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
-                    PasswordSection(password: password)
-                    Divider().overlay(Theme.hairline)
-                    FaceSection(face: face)
-                    Divider().overlay(Theme.hairline)
-                    KillSwitchSection(password: password)
+                    switch tab {
+                    case .password: PasswordSection(password: password)
+                    case .face:     FaceSection(face: face)
+                    case .security: KillSwitchSection(password: password)
+                    }
                 }
                 .padding(24)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .frame(width: 460, height: 560)
         .background(Theme.ground)
+    }
+
+    private var tabBar: some View {
+        HStack(spacing: 6) {
+            ForEach(Tab.allCases, id: \.self) { t in
+                Button { tab = t } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: t.symbol).font(.system(size: 11, weight: .semibold))
+                        Text(t.rawValue).font(.system(size: 12, weight: .medium))
+                    }
+                    .foregroundStyle(tab == t ? Theme.ground : Theme.inkMuted)
+                    .padding(.horizontal, 12).padding(.vertical, 7)
+                    .background(
+                        Capsule().fill(tab == t ? Theme.signal : Theme.surface)
+                    )
+                }
+                .buttonStyle(.plain)
+                .focusable(false)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 14)
     }
 
     private var header: some View {

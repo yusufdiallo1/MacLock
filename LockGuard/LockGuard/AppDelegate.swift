@@ -17,8 +17,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let permissions = PermissionsManager.shared
     // Held so its activation observer lives for the app's lifetime.
     private let appLock = AppLockService.shared
-    private let overlay = WindowOverlayService()
+    private let overlay = WindowOverlayService.shared
     private let passwordAuth = PasswordAuthService.shared
+    // Held so its folder watchers live for the app's lifetime.
+    private let folderLock = FolderLockService.shared
     private var killSwitchMonitors: [Any] = []
     private var cancellables = Set<AnyCancellable>()
 

@@ -52,6 +52,10 @@ final class FaceAuthService: NSObject, ObservableObject {
     /// `authenticate` refuses immediately so only the master password unlocks.
     @Published private(set) var isKillSwitchActive: Bool = false
 
+    /// The capture session, exposed so the auth overlay can show a live preview
+    /// (AVCaptureVideoPreviewLayer). Only for display — do not mutate.
+    var captureSession: AVCaptureSession { session }
+
     /// Match strictness. 0.5 = permissive, 0.95 = strict. Persisted.
     @Published var sensitivity: Double {
         didSet {

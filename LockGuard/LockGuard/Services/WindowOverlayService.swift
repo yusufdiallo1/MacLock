@@ -25,6 +25,7 @@ import SwiftUI
 
 @MainActor
 final class WindowOverlayService {
+    static let shared = WindowOverlayService()
 
     /// Called when the user authenticates (or the overlay is cancelled). The
     /// caller uses this to release the challenge guard (AppLockService.clearPending).
@@ -38,19 +39,24 @@ final class WindowOverlayService {
     // MARK: - Presentation
 
     /// Present the overlay over `app`'s focused window. `pid` is the running
-    /// app's process id; `appName` labels the card.
-    func present(forPID pid: pid_t, appName: String) {
+    /// app's process id; `appName` labels the card. `forceFullScreen` covers the
+    /// whole screen (used for folder locks, which have no window to target).
+    func present(forPID pid: pid_t, appName: String, forceFullScreen: Bool = false) {
         // If an overlay is already up, tear it down first — one at a time.
         dismiss(callResolved: false)
         targetPID = pid
 
-        let frame = Self.focusedWindowFrame(forPID: pid)
+        let frame = forceFullScreen ? nil : Self.focusedWindowFrame(forPID: pid)
         let overlayFrame = frame ?? Self.fullScreenFrame()
         let isPreciseFit = frame != nil
+
+        let icon = NSRunningApplication(processIdentifier: pid)?.icon
 
         let window = makeOverlayWindow(
             frame: overlayFrame,
             appName: appName,
+            appIcon: icon,
+            targetPID: pid,
             isFullScreenFallback: !isPreciseFit
         )
         overlayWindow = window
@@ -81,6 +87,8 @@ final class WindowOverlayService {
     private func makeOverlayWindow(
         frame: NSRect,
         appName: String,
+        appIcon: NSImage?,
+        targetPID: pid_t,
         isFullScreenFallback: Bool
     ) -> NSWindow {
         let window = NSWindow(
@@ -108,11 +116,17 @@ final class WindowOverlayService {
         blur.autoresizingMask = [.width, .height]
         blur.wantsLayer = true
 
-        // Centered auth card on top of the blur.
-        let card = AuthOverlayCardView(
+        // The full auth card, centered on the blur.
+        let card = AuthOverlayView(
             appName: appName,
+            appIcon: appIcon,
+            verifyPassword: { PasswordAuthService.shared.verify($0) },
             onSuccess: { [weak self] in self?.dismiss() },
-            onCancel: { [weak self] in self?.dismiss() }
+            onCancel: { [weak self] in self?.dismiss() },
+            onQuitApp: { [weak self] in
+                NSRunningApplication(processIdentifier: targetPID)?.terminate()
+                self?.dismiss()
+            }
         )
         let hosting = NSHostingView(rootView: card)
         hosting.translatesAutoresizingMaskIntoConstraints = false
