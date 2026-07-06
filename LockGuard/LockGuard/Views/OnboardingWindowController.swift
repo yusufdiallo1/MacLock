@@ -38,11 +38,11 @@ final class OnboardingWindowController {
             window.isMovableByWindowBackground = true
             window.backgroundColor = NSColor(Theme.ground)
             window.isReleasedWhenClosed = false
-            window.center()
             self.window = window
         }
 
         NSApp.activate(ignoringOtherApps: true)
+        window?.center()   // always re-center on present
         window?.makeKeyAndOrderFront(nil)
     }
 

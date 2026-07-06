@@ -214,12 +214,12 @@ private struct FaceSection: View {
                     .foregroundStyle(face.isEnrolled ? Theme.signal : Theme.inkMuted)
                 Spacer()
                 if face.isEnrolled {
-                    Button("Re-enroll") { face.enroll() }
+                    Button("Re-enroll") { EnrollWindowController.shared.present() }
                         .buttonStyle(GlassButtonStyle())
                     Button("Remove") { face.removeEnrollment() }
                         .buttonStyle(GlassButtonStyle())
                 } else {
-                    Button("Set Up Face Unlock") { face.enroll() }
+                    Button("Set Up Face Unlock") { EnrollWindowController.shared.present() }
                         .buttonStyle(GlassButtonStyle())
                 }
             }

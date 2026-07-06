@@ -35,6 +35,8 @@
 		AA000000000000000000011D /* PickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001D /* PickerView.swift */; };
 		AA000000000000000000011E /* AuthOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001E /* AuthOverlayView.swift */; };
 		AA000000000000000000011F /* FolderLockService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001F /* FolderLockService.swift */; };
+		AA0000000000000000000120 /* EnrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000020 /* EnrollView.swift */; };
+		AA0000000000000000000121 /* EnrollWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000021 /* EnrollWindowController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -68,6 +70,8 @@
 		AA000000000000000000001D /* PickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickerView.swift; sourceTree = "<group>"; };
 		AA000000000000000000001E /* AuthOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthOverlayView.swift; sourceTree = "<group>"; };
 		AA000000000000000000001F /* FolderLockService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderLockService.swift; sourceTree = "<group>"; };
+		AA0000000000000000000020 /* EnrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnrollView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000021 /* EnrollWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnrollWindowController.swift; sourceTree = "<group>"; };
 		AA00000000000000000000FF /* LockGuard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LockGuard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -126,6 +130,8 @@
 				AA000000000000000000001B /* SettingsWindowController.swift */,
 				AA000000000000000000001D /* PickerView.swift */,
 				AA000000000000000000001E /* AuthOverlayView.swift */,
+				AA0000000000000000000020 /* EnrollView.swift */,
+				AA0000000000000000000021 /* EnrollWindowController.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -271,6 +277,8 @@
 				AA000000000000000000011D /* PickerView.swift in Sources */,
 				AA000000000000000000011E /* AuthOverlayView.swift in Sources */,
 				AA000000000000000000011F /* FolderLockService.swift in Sources */,
+				AA0000000000000000000120 /* EnrollView.swift in Sources */,
+				AA0000000000000000000121 /* EnrollWindowController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

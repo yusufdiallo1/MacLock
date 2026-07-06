@@ -48,6 +48,33 @@ final class FaceAuthService: NSObject, ObservableObject {
     /// Whether an enrollment exists (drives "Set up Face Unlock" vs "Re-enroll").
     @Published private(set) var isEnrolled: Bool = false
 
+    /// A pose the user is asked to strike during multi-angle enrollment. The
+    /// enroll view reads this to guide the user; each pose contributes frames to
+    /// the profile so it captures the face from several angles.
+    enum EnrollPose: Int, CaseIterable {
+        case center, left, right, up, down
+        var instruction: String {
+            switch self {
+            case .center: return "Look straight at the camera"
+            case .left:   return "Slowly turn your head left"
+            case .right:  return "Slowly turn your head right"
+            case .up:     return "Tilt your head up"
+            case .down:   return "Tilt your head down"
+            }
+        }
+        var symbol: String {
+            switch self {
+            case .center: return "face.smiling"
+            case .left:   return "arrow.left"
+            case .right:  return "arrow.right"
+            case .up:     return "arrow.up"
+            case .down:   return "arrow.down"
+            }
+        }
+    }
+    /// The current pose being captured, or nil when not enrolling.
+    @Published private(set) var enrollPose: EnrollPose?
+
     /// While true (set by the emergency kill switch), face unlock is disabled —
     /// `authenticate` refuses immediately so only the master password unlocks.
     @Published private(set) var isKillSwitchActive: Bool = false
@@ -70,7 +97,12 @@ final class FaceAuthService: NSObject, ObservableObject {
     private static let sensitivityKey = "LockGuard.faceSensitivity.v1"
     private static let keychainService = "com.lockguard.faceauth"
     private static let keychainAccount = "enrolled-face-vector-v1"
-    private static let enrollmentFrameCount = 5
+    /// Frames captured per pose during multi-angle enrollment.
+    private static let framesPerPose = 2
+    /// Total enrollment frames = poses × framesPerPose.
+    private static var enrollmentFrameCount: Int {
+        EnrollPose.allCases.count * framesPerPose
+    }
     /// A wrong/absent face fails after this long rather than sampling forever.
     private static let authTimeout: TimeInterval = 8
 
@@ -86,6 +118,8 @@ final class FaceAuthService: NSObject, ObservableObject {
     /// Per-frame vectors captured during the current enrollment. Their mean and
     /// per-feature standard deviation become the stored profile.
     private var enrollmentVectors: [[Float]] = []
+    /// True during the brief pause between poses (no frames counted).
+    private var pausedBetweenPoses = false
     /// The enrolled profile (loaded from Keychain), if any.
     private var enrolledProfile: FaceProfile?
     /// Called once when the current authenticate attempt resolves.
@@ -120,6 +154,7 @@ final class FaceAuthService: NSObject, ObservableObject {
             guard let self else { return }
             guard ready else { self.state = .unavailable; return }
             self.enrollmentVectors.removeAll()
+            self.enrollPose = .center
             self.state = .enrolling(progress: 0, total: Self.enrollmentFrameCount)
             self.startSessionIfNeeded()
         }
@@ -158,6 +193,8 @@ final class FaceAuthService: NSObject, ObservableObject {
     func cancel() {
         stopSession()
         authDeadline = nil
+        enrollPose = nil
+        pausedBetweenPoses = false
         if case .authenticating = state { authResolution?(false); authResolution = nil }
         state = .idle
     }
@@ -252,12 +289,20 @@ final class FaceAuthService: NSObject, ObservableObject {
     private func handle(vector: [Float]) {
         switch state {
         case .enrolling:
-            // Defensive: only count while genuinely enrolling and under the cap.
-            guard enrollmentVectors.count < Self.enrollmentFrameCount else { return }
+            // Guided multi-angle capture: collect `framesPerPose` frames for the
+            // current pose, then pause and advance to the next pose so the user
+            // can reposition. `pausedBetweenPoses` gates capture during the pause.
+            guard !pausedBetweenPoses,
+                  enrollmentVectors.count < Self.enrollmentFrameCount else { return }
             enrollmentVectors.append(vector)
             let n = enrollmentVectors.count
             state = .enrolling(progress: n, total: Self.enrollmentFrameCount)
-            if n >= Self.enrollmentFrameCount { finishEnrollment() }
+
+            if n >= Self.enrollmentFrameCount {
+                finishEnrollment()
+            } else if n % Self.framesPerPose == 0 {
+                advancePose(after: n)
+            }
 
         case .authenticating:
             // Time out a wrong/absent face instead of streaming forever.
@@ -282,8 +327,22 @@ final class FaceAuthService: NSObject, ObservableObject {
         }
     }
 
+    /// Pause capture, move to the next pose, then resume after a beat so the
+    /// user has time to reposition their head.
+    private func advancePose(after captured: Int) {
+        let nextIndex = captured / Self.framesPerPose
+        guard let next = EnrollPose(rawValue: nextIndex) else { return }
+        pausedBetweenPoses = true
+        enrollPose = next
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.3) { [weak self] in
+            self?.pausedBetweenPoses = false
+        }
+    }
+
     private func finishEnrollment() {
         stopSession()
+        enrollPose = nil
+        pausedBetweenPoses = false
         guard let profile = Self.buildProfile(enrollmentVectors) else {
             state = .failed(reason: "Couldn't read your face clearly. Try again in better light.")
             return

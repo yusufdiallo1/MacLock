@@ -1,26 +1,21 @@
 //
-//  SettingsWindowController.swift
+//  EnrollWindowController.swift
 //  LockGuard
 //
-//  Hosts SettingsView in a titled window, opened from the popover's gear
-//  button. Reuses the shared service singletons so changes take effect live.
+//  Hosts EnrollView (multi-angle face enrollment) in a centered window.
 //
 
 import AppKit
 import SwiftUI
 
 @MainActor
-final class SettingsWindowController {
-
+final class EnrollWindowController {
+    static let shared = EnrollWindowController()
     private var window: NSWindow?
 
     func present() {
         if window == nil {
-            let root = SettingsView(
-                password: .shared,
-                face: .shared,
-                onClose: { [weak self] in self?.dismiss() }
-            )
+            let root = EnrollView(onClose: { [weak self] in self?.dismiss() })
             let hosting = NSHostingController(rootView: root)
             let window = NSWindow(contentViewController: hosting)
             window.styleMask = [.titled, .fullSizeContentView, .closable]
@@ -31,10 +26,11 @@ final class SettingsWindowController {
             window.isMovableByWindowBackground = true
             window.backgroundColor = NSColor(Theme.ground)
             window.isReleasedWhenClosed = false
+            window.center()
             self.window = window
         }
         NSApp.activate(ignoringOtherApps: true)
-        window?.center()   // always re-center on present
+        window?.center()
         window?.makeKeyAndOrderFront(nil)
     }
 
