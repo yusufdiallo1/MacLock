@@ -17,6 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let permissions = PermissionsManager.shared
     // Held so its activation observer lives for the app's lifetime.
     private let appLock = AppLockService.shared
+    private let overlay = WindowOverlayService()
     private var cancellables = Set<AnyCancellable>()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -38,28 +39,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    /// Bridge the enforcement pipeline to the (not-yet-built) auth overlay.
-    /// When a locked app is activated, AppLockService posts this notification;
-    /// for now we bring LockGuard forward and log which app tripped the lock.
-    /// Replace the body with the real overlay presentation once it exists.
+    /// Bridge the enforcement pipeline to the auth overlay. When a locked app
+    /// is activated, AppLockService posts this notification; we resolve the
+    /// running app's PID and present WindowOverlayService over its window.
     private func observeAuthOverlayRequests() {
+        // When the overlay resolves (auth passed or cancelled), release the
+        // challenge guard so the same app can challenge again next activation.
+        overlay.onResolved = { [weak self] in self?.appLock.clearPending() }
+
         NotificationCenter.default.publisher(for: .lockGuardShouldPresentAuthOverlay)
             .receive(on: RunLoop.main)
             .sink { [weak self] note in
-                let app = note.userInfo?[AppLockService.lockedAppUserInfoKey] as? LockedApp
-                NSLog("LockGuard: locked app activated — %@", app?.bundleID ?? "unknown")
-                self?.presentAuthOverlayPlaceholder(for: app)
+                guard let app = note.userInfo?[AppLockService.lockedAppUserInfoKey] as? LockedApp
+                else { return }
+                self?.presentOverlay(for: app)
             }
             .store(in: &cancellables)
     }
 
-    private func presentAuthOverlayPlaceholder(for app: LockedApp?) {
-        // TODO: present the real full-screen auth overlay + face recognition,
-        // and call appLock.clearPending() when auth passes or is cancelled.
-        // We deliberately do NOT clear here: the challenge guard must stay set
-        // until the locked app deactivates, or focus bouncing back to it would
-        // re-fire immediately. Just surface LockGuard so the trigger is visible.
-        NSApp.activate(ignoringOtherApps: true)
+    private func presentOverlay(for app: LockedApp) {
+        // Resolve the running instance's PID from the bundle ID. If the app
+        // isn't actually running (rare race), there's nothing to cover.
+        guard let running = NSRunningApplication
+            .runningApplications(withBundleIdentifier: app.bundleID).first
+        else {
+            NSLog("LockGuard: %@ not running; nothing to overlay", app.bundleID)
+            appLock.clearPending()
+            return
+        }
+        overlay.present(forPID: running.processIdentifier, appName: app.name)
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
