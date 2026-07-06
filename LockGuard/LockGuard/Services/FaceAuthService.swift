@@ -569,6 +569,9 @@ private extension FaceAuthService {
             kSecValueData as String: data,
             // Encrypted at rest, only readable on this device while unlocked.
             kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+            // Data-protection keychain → scoped to this app by code signature,
+            // so LockGuard reads its own items silently (no system prompt).
+            kSecUseDataProtectionKeychain as String: true,
         ]
         return SecItemAdd(query as CFDictionary, nil) == errSecSuccess
     }
@@ -580,6 +583,7 @@ private extension FaceAuthService {
             kSecAttrAccount as String: keychainAccount,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne,
+            kSecUseDataProtectionKeychain as String: true,
         ]
         var item: CFTypeRef?
         guard SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess,
@@ -593,6 +597,7 @@ private extension FaceAuthService {
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: keychainService,
             kSecAttrAccount as String: keychainAccount,
+            kSecUseDataProtectionKeychain as String: true,
         ]
         SecItemDelete(query as CFDictionary)
     }

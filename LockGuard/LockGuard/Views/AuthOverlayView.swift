@@ -35,9 +35,9 @@ struct AuthOverlayView: View {
 
     private enum Phase { case scanning, success, failure }
 
-    // FaceGate purple accent.
-    private let accent = Color(hex: 0x8B7CF6)
-    private let accentSoft = Color(hex: 0x8B7CF6).opacity(0.16)
+    // FaceGate purple accent (centralized in Theme).
+    private let accent = Theme.accent
+    private let accentSoft = Theme.accentSoft
 
     private var spring: Animation? {
         reduceMotion ? nil : .spring(response: 0.42, dampingFraction: 0.78)

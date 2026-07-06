@@ -108,13 +108,24 @@ final class WindowOverlayService {
         // Show over full-screen spaces and follow the user across spaces.
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
 
-        // Frosted app-window blur: a visual-effect view fills the whole overlay.
+        // Backdrop. Per-window fit: frost the app window (Liquid Glass blur).
+        // Full-screen fallback (AX couldn't target a window): DON'T frost the
+        // whole screen — that's jarring. Use a light dim so the desktop shows
+        // through, with just the compact card centered on top.
         let blur = NSVisualEffectView(frame: NSRect(origin: .zero, size: frame.size))
-        blur.material = .hudWindow    // reads closest to .ultraThinMaterial here
-        blur.blendingMode = .behindWindow
-        blur.state = .active
         blur.autoresizingMask = [.width, .height]
         blur.wantsLayer = true
+        if isFullScreenFallback {
+            // Light dim, not a full frost.
+            blur.material = .hudWindow
+            blur.blendingMode = .behindWindow
+            blur.state = .inactive          // minimal blur
+            blur.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.45).cgColor
+        } else {
+            blur.material = .hudWindow      // frosts the app window behind it
+            blur.blendingMode = .behindWindow
+            blur.state = .active
+        }
 
         // The full auth card, centered on the blur.
         let card = AuthOverlayView(

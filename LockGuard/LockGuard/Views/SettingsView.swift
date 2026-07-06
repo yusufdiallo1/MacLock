@@ -33,7 +33,7 @@ struct SettingsView: View {
     }
     @State private var tab: Tab = .apps
 
-    static let accent = Color(hex: 0x8B7CF6)
+    static let accent = Theme.accent
 
     var body: some View {
         HStack(spacing: 0) {

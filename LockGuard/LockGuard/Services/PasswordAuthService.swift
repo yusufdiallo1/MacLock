@@ -203,6 +203,8 @@ private extension PasswordAuthService {
             kSecAttrAccount as String: keychainAccount,
             kSecValueData as String: data,
             kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+            // Data-protection keychain → silent self-access, no system prompt.
+            kSecUseDataProtectionKeychain as String: true,
         ]
         return SecItemAdd(query as CFDictionary, nil) == errSecSuccess
     }
@@ -214,6 +216,7 @@ private extension PasswordAuthService {
             kSecAttrAccount as String: keychainAccount,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne,
+            kSecUseDataProtectionKeychain as String: true,
         ]
         var item: CFTypeRef?
         guard SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess,
@@ -227,6 +230,7 @@ private extension PasswordAuthService {
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: keychainService,
             kSecAttrAccount as String: keychainAccount,
+            kSecUseDataProtectionKeychain as String: true,
         ]
         SecItemDelete(query as CFDictionary)
     }

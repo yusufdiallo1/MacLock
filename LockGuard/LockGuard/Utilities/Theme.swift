@@ -21,9 +21,19 @@ enum Theme {
     static let inkMuted   = Color(hex: 0x9AA0AD)   // secondary text
     static let inkFaint   = Color(hex: 0x646A78)   // captions
 
-    // Signal — the single accent. Amber = armed / active.
-    static let signal     = Color(hex: 0xE8A33D)
-    static let signalSoft = Color(hex: 0xE8A33D).opacity(0.14)
+    // Signal — the single accent. FaceGate purple = armed / active.
+    static let signal     = Color(hex: 0x8B7CF6)
+    static let signalSoft = Color(hex: 0x8B7CF6).opacity(0.16)
+
+    /// Semantic aliases so views can read `Theme.accent` instead of `signal`.
+    static let accent     = signal
+    static let accentSoft = signalSoft
+
+    /// Destructive / error red, used for "Delete", failures, danger states.
+    static let danger     = Color(hex: 0xE0675A)
+
+    /// The reference's blue "Add Apps" action button.
+    static let actionBlue = Color(hex: 0x0A84FF)
 
     // Pending / steel — the not-yet-armed state.
     static let steel      = Color(hex: 0x5B6170)
