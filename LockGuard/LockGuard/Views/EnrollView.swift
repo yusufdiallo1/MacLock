@@ -16,21 +16,60 @@ struct EnrollView: View {
     @ObservedObject private var face = FaceAuthService.shared
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private let accent = Color(hex: 0x8B7CF6)
+    private let accent = Theme.accent
 
     var body: some View {
-        VStack(spacing: 20) {
-            header
+        VStack(spacing: 18) {
+            logoHeader
+            liveStatus
             cameraViewer
-            guidance
             progressBar
+            captureCount
             footer
         }
         .padding(28)
-        .frame(width: 380, height: 520)
+        .frame(width: 420, height: 560)
         .background(Theme.ground)
         .onAppear { if !isDone { face.enroll() } }
         .onDisappear { face.cancel() }
+    }
+
+    // MARK: - Reference-matching header + live status
+
+    private var logoHeader: some View {
+        VStack(spacing: 6) {
+            Image(systemName: "faceid").font(.system(size: 30)).foregroundStyle(Theme.actionBlue)
+            Text("Face Enrollment").font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(Theme.ink)
+            Text("Follow the prompts on the camera screen").font(.system(size: 12)).foregroundStyle(Theme.inkMuted)
+        }
+    }
+
+    private var liveStatus: some View {
+        Group {
+            if isDone {
+                Text("Face enrolled 🎉").font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.accent)
+            } else if isFailed {
+                Text(failReason).font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.danger)
+            } else if !face.faceDetected {
+                Text("No face detected — look at the camera").font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.danger)
+            } else if let pose = face.enrollPose {
+                Text(pose.instruction).font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.ink)
+            } else {
+                Text("Getting ready…").font(.system(size: 13)).foregroundStyle(Theme.inkMuted)
+            }
+        }
+        .frame(height: 20)
+        .animation(.easeInOut, value: face.faceDetected)
+    }
+
+    private var failReason: String {
+        if case let .failed(r) = face.state { return r }
+        return "Enrollment failed"
+    }
+
+    private var captureCount: some View {
+        Text("\(progress.done) of \(progress.total) captures")
+            .font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.inkFaint)
     }
 
     // MARK: - Derived
@@ -44,89 +83,36 @@ struct EnrollView: View {
 
     // MARK: - Pieces
 
-    private var header: some View {
-        HStack {
-            Text("Set Up Face Unlock")
-                .font(.system(size: 16, weight: .bold, design: .rounded))
-                .foregroundStyle(Theme.ink)
-            Spacer()
-            Button(action: onClose) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(Theme.inkMuted)
-                    .frame(width: 24, height: 24)
-                    .background(Circle().fill(Theme.surface))
-            }
-            .buttonStyle(.plain).focusable(false)
-            .keyboardShortcut(.cancelAction)
-        }
-    }
-
+    /// Large rounded live preview with a circular face-guide (reference layout).
     private var cameraViewer: some View {
         ZStack {
-            // progress ring around the circle
-            Circle()
-                .trim(from: 0, to: CGFloat(progress.done) / CGFloat(max(progress.total, 1)))
-                .stroke(accent, style: StrokeStyle(lineWidth: 5, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-                .frame(width: 210, height: 210)
-                .animation(.easeOut(duration: 0.3), value: progress.done)
-
             EnrollCameraPreview(session: face.captureSession)
+                .frame(width: 300, height: 220)
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(Theme.glassEdge, lineWidth: 1))
+            // circular face guide
+            Circle().strokeBorder(Color.white.opacity(0.55), lineWidth: 2)
                 .frame(width: 190, height: 190)
-                .clipShape(Circle())
-                .overlay(Circle().strokeBorder(Theme.glassEdge, lineWidth: 1))
-                .saturation(isDone ? 1 : 0.95)
 
             if isDone {
-                Circle().fill(Color.green.opacity(0.22)).frame(width: 190, height: 190)
-                Image(systemName: "checkmark")
-                    .font(.system(size: 60, weight: .bold))
-                    .foregroundStyle(.green)
+                RoundedRectangle(cornerRadius: 20).fill(Color.green.opacity(0.22)).frame(width: 300, height: 220)
+                Image(systemName: "checkmark").font(.system(size: 56, weight: .bold)).foregroundStyle(.green)
                     .transition(.scale.combined(with: .opacity))
-            } else if let pose = face.enrollPose {
-                // pose direction arrow, drifting toward the requested side
-                Image(systemName: pose.symbol)
-                    .font(.system(size: 26, weight: .bold))
-                    .foregroundStyle(accent)
+            } else if let pose = face.enrollPose, pose != .center, face.faceDetected {
+                Image(systemName: pose.symbol).font(.system(size: 30, weight: .bold)).foregroundStyle(accent)
                     .offset(poseOffset(pose))
-                    .opacity(pose == .center ? 0 : 1)
-                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.6).repeatForever(autoreverses: true),
-                               value: face.enrollPose)
+                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.6).repeatForever(autoreverses: true), value: face.enrollPose)
             }
         }
-        .frame(height: 210)
+        .frame(height: 220)
     }
 
     private func poseOffset(_ pose: FaceAuthService.EnrollPose) -> CGSize {
         switch pose {
         case .center: return .zero
-        case .left:   return CGSize(width: -118, height: 0)
-        case .right:  return CGSize(width: 118, height: 0)
-        case .up:     return CGSize(width: 0, height: -118)
-        case .down:   return CGSize(width: 0, height: 118)
+        case .left:   return CGSize(width: -110, height: 0)
+        case .right:  return CGSize(width: 110, height: 0)
         }
-    }
-
-    private var guidance: some View {
-        VStack(spacing: 4) {
-            Text(guidanceTitle)
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
-                .foregroundStyle(isFailed ? Color(hex: 0xE0675A) : Theme.ink)
-                .multilineTextAlignment(.center)
-            Text("Move slowly so we capture every angle.")
-                .font(.system(size: 11.5))
-                .foregroundStyle(Theme.inkMuted)
-                .opacity(isDone || isFailed ? 0 : 1)
-        }
-        .frame(height: 44)
-        .animation(.easeInOut, value: guidanceTitle)
-    }
-
-    private var guidanceTitle: String {
-        if isDone { return "Face enrolled 🎉" }
-        if case let .failed(reason) = face.state { return reason }
-        return face.enrollPose?.instruction ?? "Getting ready…"
     }
 
     private var progressBar: some View {
@@ -142,31 +128,25 @@ struct EnrollView: View {
     }
 
     private var footer: some View {
-        Group {
+        VStack(spacing: 10) {
             if isDone {
                 Button(action: onClose) {
-                    Text("Done")
-                        .font(.system(size: 13.5, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity).padding(.vertical, 10)
-                        .background(Capsule().fill(accent))
-                }
-                .buttonStyle(.plain).focusable(false)
-            } else if isFailed {
-                Button(action: { face.enroll() }) {
-                    Text("Try Again")
-                        .font(.system(size: 13.5, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity).padding(.vertical, 10)
-                        .background(Capsule().fill(accent))
-                }
-                .buttonStyle(.plain).focusable(false)
+                    Text("Done").font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white).frame(maxWidth: .infinity).padding(.vertical, 11)
+                        .background(Capsule().fill(Theme.actionBlue))
+                }.buttonStyle(.plain).focusable(false)
             } else {
-                Text("\(progress.done) / \(progress.total) captures")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(Theme.inkFaint)
-                    .frame(height: 40)
+                // Recapture restarts the whole capture (reference "Recapture").
+                Button(action: { face.enroll() }) {
+                    Text("Recapture").font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.white).frame(maxWidth: .infinity).padding(.vertical, 11)
+                        .background(Capsule().fill(Theme.actionBlue)
+                            .overlay(Capsule().strokeBorder(accent, lineWidth: 2)))
+                }.buttonStyle(.plain).focusable(false)
             }
+            Button(action: onClose) {
+                Text("Cancel").font(.system(size: 12.5, weight: .medium)).foregroundStyle(Theme.inkMuted)
+            }.buttonStyle(.plain).focusable(false).keyboardShortcut(.cancelAction)
         }
     }
 }

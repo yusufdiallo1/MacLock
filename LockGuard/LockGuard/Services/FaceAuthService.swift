@@ -52,14 +52,12 @@ final class FaceAuthService: NSObject, ObservableObject {
     /// enroll view reads this to guide the user; each pose contributes frames to
     /// the profile so it captures the face from several angles.
     enum EnrollPose: Int, CaseIterable {
-        case center, left, right, up, down
+        case center, left, right
         var instruction: String {
             switch self {
             case .center: return "Look straight at the camera"
             case .left:   return "Slowly turn your head left"
             case .right:  return "Slowly turn your head right"
-            case .up:     return "Tilt your head up"
-            case .down:   return "Tilt your head down"
             }
         }
         var symbol: String {
@@ -67,13 +65,16 @@ final class FaceAuthService: NSObject, ObservableObject {
             case .center: return "face.smiling"
             case .left:   return "arrow.left"
             case .right:  return "arrow.right"
-            case .up:     return "arrow.up"
-            case .down:   return "arrow.down"
             }
         }
     }
     /// The current pose being captured, or nil when not enrolling.
     @Published private(set) var enrollPose: EnrollPose?
+
+    /// True when a face is currently visible to the camera (drives the live
+    /// "No face detected — look at the camera" enrollment status).
+    @Published private(set) var faceDetected: Bool = false
+    private var faceDetectResetWork: DispatchWorkItem?
 
     /// While true (set by the emergency kill switch), face unlock is disabled —
     /// `authenticate` refuses immediately so only the master password unlocks.
@@ -98,7 +99,7 @@ final class FaceAuthService: NSObject, ObservableObject {
     private static let keychainService = "com.lockguard.faceauth"
     private static let keychainAccount = "enrolled-face-vector-v1"
     /// Frames captured per pose during multi-angle enrollment.
-    private static let framesPerPose = 2
+    private static let framesPerPose = 3
     /// Total enrollment frames = poses × framesPerPose.
     private static var enrollmentFrameCount: Int {
         EnrollPose.allCases.count * framesPerPose
@@ -134,6 +135,12 @@ final class FaceAuthService: NSObject, ObservableObject {
     struct FaceProfile: Equatable {
         var mean: [Float]
         var std: [Float]
+    }
+
+    /// Internal accessor so FaceProfileStore can rebuild a profile from stored
+    /// samples using the same statistics (buildProfile itself is fileprivate).
+    nonisolated static func profile(from vectors: [[Float]]) -> FaceProfile? {
+        buildProfile(vectors)
     }
 
     private override init() {
@@ -302,6 +309,14 @@ final class FaceAuthService: NSObject, ObservableObject {
     /// Process one detected face vector. Runs on the main actor, which
     /// serializes it — the enrollment counter can't overshoot 5.
     private func handle(vector: [Float]) {
+        // A vector arriving means a face is visible. Debounce back to false so
+        // the enroll view can show "No face detected" when frames stop yielding.
+        faceDetected = true
+        faceDetectResetWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in self?.faceDetected = false }
+        faceDetectResetWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: work)
+
         switch state {
         case .enrolling:
             // Guided multi-angle capture: collect `framesPerPose` frames for the
@@ -332,6 +347,12 @@ final class FaceAuthService: NSObject, ObservableObject {
             if Self.matches(vector, to: profile, sensitivity: sensitivity) {
                 stopSession()
                 authDeadline = nil
+                // Adaptive training: feed this accepted vector; if the store
+                // rebuilt a refined profile, adopt + persist it.
+                if let refined = FaceProfileStore.shared.appendAcceptedSample(vector, currentProfile: profile) {
+                    enrolledProfile = refined
+                    _ = Self.storeEnrolledProfile(refined)
+                }
                 state = .success
                 authResolution?(true); authResolution = nil
             }
@@ -362,6 +383,8 @@ final class FaceAuthService: NSObject, ObservableObject {
             state = .failed(reason: "Couldn't read your face clearly. Try again in better light.")
             return
         }
+        // Save all captures for adaptive training ("keeps learning your face").
+        FaceProfileStore.shared.appendEnrollmentSamples(enrollmentVectors)
         enrollmentVectors.removeAll()
         if Self.storeEnrolledProfile(profile) {
             enrolledProfile = profile
