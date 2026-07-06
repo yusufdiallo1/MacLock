@@ -239,15 +239,25 @@ struct AuthOverlayView: View {
 
     private func reactTo(_ state: FaceAuthService.State) {
         switch state {
-        case .success: succeed()
-        case .failed:  fail()
+        case .success:
+            guard phase != .success else { return }
+            AuthCoordinator.shared.recordSuccess(method: .face, context: appName)
+            succeed()
+        case .failed:
+            AuthCoordinator.shared.recordFailure(method: .face, context: appName)
+            fail()
         default: break
         }
     }
 
     private func submitPassword() {
-        guard verifyPassword(password) else { fail(); return }
-        succeed()
+        if verifyPassword(password) {
+            AuthCoordinator.shared.recordSuccess(method: .password, context: appName)
+            succeed()
+        } else {
+            AuthCoordinator.shared.recordFailure(method: .password, context: appName)
+            fail()
+        }
     }
 
     private func succeed() {

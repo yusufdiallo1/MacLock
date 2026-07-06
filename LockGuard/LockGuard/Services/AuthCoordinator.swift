@@ -88,40 +88,41 @@ final class AuthCoordinator: ObservableObject {
         }
     }
 
+    /// The pending gate's resolver. Owned by the coordinator (not a view/closure)
+    /// so EVERY teardown path resolves it exactly once — never a leaked
+    /// continuation (which would hang `requireAuth` forever), never a double
+    /// resume. `resolve(_:)` is idempotent.
+    private var pendingCompletion: ((Bool) -> Void)?
+
+    private func resolve(_ success: Bool) {
+        guard let completion = pendingCompletion else { return }
+        pendingCompletion = nil
+        completion(success)
+    }
+
     private func presentGate(
         reason: String,
         allowFace: Bool,
         completion: @escaping (Bool) -> Void
     ) {
-        // Tear down any existing gate first.
+        // Tear down any existing gate first — its continuation resolves false.
         dismissGate()
+        pendingCompletion = completion
 
-        var resolved = false
-        let finish: (Bool) -> Void = { [weak self] success in
-            guard !resolved else { return }
-            resolved = true
-            if success { self?.recordSuccess(method: .password, context: reason) }
-            self?.dismissGate()
-            completion(success)
-        }
-
+        // Password/face outcomes are recorded by AuthGateView with the correct
+        // method; the coordinator only resolves + dismisses here.
         let root = AuthGateView(
             title: "Authenticate to proceed",
             subtitle: reason,
             icon: NSApp.applicationIconImage,
             allowFace: allowFace && faceAllowedNow,
-            verifyPassword: { [weak self] pw in
-                let ok = PasswordAuthService.shared.verify(pw)
-                if ok { self?.recordSuccess(method: .password, context: reason) }
-                else { self?.recordFailure(method: .password, context: reason) }
-                return ok
-            },
-            onSuccess: { finish(true) },
-            onCancel: { finish(false) }
+            verifyPassword: { PasswordAuthService.shared.verify($0) },
+            onSuccess: { [weak self] in self?.dismissGate(resolveWith: true) },
+            onCancel: { [weak self] in self?.dismissGate(resolveWith: false) }
         )
 
         let hosting = NSHostingController(rootView: root)
-        let window = NSWindow(contentViewController: hosting)
+        let window = GateWindow(contentViewController: hosting)
         window.styleMask = [.borderless]
         window.isOpaque = false
         window.backgroundColor = .clear
@@ -129,16 +130,23 @@ final class AuthCoordinator: ObservableObject {
         window.isMovableByWindowBackground = true
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         window.isReleasedWhenClosed = false
+        // If the window is closed by any other path, resolve false (no hang).
+        window.onClose = { [weak self] in self?.resolve(false) }
         window.center()
         gateWindow = window
         NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
     }
 
-    private func dismissGate() {
+    /// Dismiss the gate and resolve the pending continuation. Called by success/
+    /// cancel, re-entrant presentGate, and any external teardown — always
+    /// resolves so `requireAuth` can never hang.
+    func dismissGate(resolveWith success: Bool = false) {
+        if let window = gateWindow as? GateWindow { window.onClose = nil }
         gateWindow?.orderOut(nil)
         gateWindow = nil
         FaceAuthService.shared.cancel()
+        resolve(success)
     }
 
     // MARK: - Record outcomes (single choke point → training + logging)
@@ -223,4 +231,11 @@ final class AuthCoordinator: ObservableObject {
         let c = Calendar.current.dateComponents([.hour, .minute], from: date)
         return (c.hour ?? 0) * 60 + (c.minute ?? 0)
     }
+}
+
+/// A borderless auth window that reports when it closes for any reason, so the
+/// coordinator can always resolve its pending continuation (never a hang).
+private final class GateWindow: NSWindow {
+    var onClose: (() -> Void)?
+    override func close() { onClose?(); onClose = nil; super.close() }
 }

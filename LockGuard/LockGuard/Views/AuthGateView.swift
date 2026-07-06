@@ -212,8 +212,11 @@ struct AuthGateView: View {
     }
 
     private func reactToFace(_ s: FaceAuthService.State) {
+        // onChange only fires on transitions, but guard anyway so one face
+        // attempt records at most one success or one failure (never per-frame).
         switch s {
         case .success:
+            guard !didSucceed else { return }
             AuthCoordinator.shared.recordSuccess(method: .face, context: title)
             succeed()
         case .failed:

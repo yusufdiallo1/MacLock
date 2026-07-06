@@ -65,15 +65,18 @@ final class LaunchAgentService {
         try? FileManager.default.removeItem(at: plistURL)
     }
 
-    @discardableResult
-    private func runLaunchctl(_ args: [String]) -> Bool {
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/bin/launchctl")
-        task.arguments = args
-        task.standardOutput = nil
-        task.standardError = nil
-        do { try task.run(); task.waitUntilExit(); return task.terminationStatus == 0 }
-        catch { return false }
+    /// Run launchctl off the main actor so a slow/blocked launchd domain can't
+    /// freeze the UI (which includes the auth gate).
+    private func runLaunchctl(_ args: [String]) {
+        Task.detached(priority: .utility) {
+            let task = Process()
+            task.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+            task.arguments = args
+            task.standardOutput = nil
+            task.standardError = nil
+            try? task.run()
+            task.waitUntilExit()
+        }
     }
 
     // MARK: - Launch at login (SMAppService)

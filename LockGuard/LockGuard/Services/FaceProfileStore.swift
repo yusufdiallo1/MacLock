@@ -22,6 +22,9 @@ final class FaceProfileStore {
     /// Cap on how many samples we keep — bounds file size and limits how far a
     /// bad sample could ever move the profile.
     private static let maxSamples = 120
+    /// Enrollment anchors kept at the front and never trimmed.
+    private static let maxAnchors = 12
+    private var anchorCount = 0
     /// Refine the stored profile after this many new accepted samples.
     private static let refineEvery = 8
     /// Accepted-auth samples must be within this RMS-z of the current profile to
@@ -35,13 +38,20 @@ final class FaceProfileStore {
     private init() {
         fileURL = CryptoBox.appSupportDirectory().appendingPathComponent("face.samples.enc")
         samples = load()
+        // Anchors are always the leading samples; recover the count on launch.
+        anchorCount = min(samples.count, Self.maxAnchors)
     }
 
     // MARK: - Ingest
 
-    /// Store the enrollment captures (called at the end of enroll()).
+    /// Store the enrollment captures (called at the end of enroll()). These are
+    /// the ANCHOR: they are never trimmed, so adaptive training can slow-walk
+    /// but can never fully drift away from the real enrollment.
     func appendEnrollmentSamples(_ vectors: [[Float]]) {
-        samples.append(contentsOf: vectors)
+        anchorCount = min(vectors.count, Self.maxAnchors)
+        // Put anchors first so trim() (which drops oldest *adaptive* samples)
+        // never evicts them.
+        samples.insert(contentsOf: vectors.prefix(anchorCount), at: 0)
         trim()
         persist()
     }
@@ -80,9 +90,13 @@ final class FaceProfileStore {
     // MARK: - Helpers
 
     private func trim() {
-        if samples.count > Self.maxSamples {
-            samples.removeFirst(samples.count - Self.maxSamples)
-        }
+        guard samples.count > Self.maxSamples else { return }
+        // Drop the oldest ADAPTIVE samples only — never the leading anchors.
+        let overflow = samples.count - Self.maxSamples
+        let firstAdaptive = anchorCount
+        let removable = max(0, samples.count - firstAdaptive)
+        let toRemove = min(overflow, removable)
+        if toRemove > 0 { samples.removeSubrange(firstAdaptive..<(firstAdaptive + toRemove)) }
     }
 
     private static func rmsZ(_ v: [Float], _ p: FaceAuthService.FaceProfile) -> Float {

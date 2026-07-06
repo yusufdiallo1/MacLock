@@ -103,13 +103,25 @@ enum CryptoBox {
     // MARK: - Key management
 
     private static func key() -> SymmetricKey {
-        if let existing = loadKey() { return existing }
-        let fresh = SymmetricKey(size: .bits256)
-        storeKey(fresh)
-        return fresh
+        switch loadKey() {
+        case .found(let k):
+            return k
+        case .notFound:
+            let fresh = SymmetricKey(size: .bits256)
+            storeKey(fresh)
+            return fresh
+        case .unreadable:
+            // Key exists but can't be read right now (e.g. keychain locked).
+            // Do NOT overwrite it — that would permanently orphan all prior
+            // encrypted data. Return an ephemeral key; this session's writes
+            // won't decrypt later, but existing data stays recoverable.
+            return SymmetricKey(size: .bits256)
+        }
     }
 
-    private static func loadKey() -> SymmetricKey? {
+    private enum KeyLookup { case found(SymmetricKey), notFound, unreadable }
+
+    private static func loadKey() -> KeyLookup {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: keychainService,
@@ -119,9 +131,16 @@ enum CryptoBox {
             kSecUseDataProtectionKeychain as String: true,
         ]
         var item: CFTypeRef?
-        guard SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess,
-              let data = item as? Data else { return nil }
-        return SymmetricKey(data: data)
+        let status = SecItemCopyMatching(query as CFDictionary, &item)
+        switch status {
+        case errSecSuccess:
+            if let data = item as? Data { return .found(SymmetricKey(data: data)) }
+            return .unreadable
+        case errSecItemNotFound:
+            return .notFound
+        default:
+            return .unreadable   // locked / ACL / other — never overwrite
+        }
     }
 
     private static func storeKey(_ key: SymmetricKey) {
