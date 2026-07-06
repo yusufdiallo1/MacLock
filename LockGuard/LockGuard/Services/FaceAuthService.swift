@@ -168,6 +168,7 @@ final class FaceAuthService: NSObject, ObservableObject {
             state = .failed(reason: "Face unlock is disabled. Enter your password.")
             completion(false); return
         }
+        ensureProfileLoaded()   // reload if evicted by the inactivity timer
         guard enrolledProfile != nil else {
             state = .failed(reason: "No face is enrolled yet.")
             completion(false); return
@@ -205,6 +206,20 @@ final class FaceAuthService: NSObject, ObservableObject {
         enrolledProfile = nil
         isEnrolled = false
         if case .success = state {} else { state = .idle }
+    }
+
+    /// Drop the face profile from memory (hardening: after 3 min inactivity).
+    /// `isEnrolled` stays true — the profile is still in the Keychain — so the
+    /// next auth/enroll reloads it, forcing a fresh read.
+    func evictInMemoryProfile() {
+        enrolledProfile = nil
+    }
+
+    /// Reload the profile from the Keychain if it was evicted but is enrolled.
+    func ensureProfileLoaded() {
+        if enrolledProfile == nil && isEnrolled {
+            enrolledProfile = Self.loadEnrolledProfile()
+        }
     }
 
     // MARK: - Camera availability & authorization

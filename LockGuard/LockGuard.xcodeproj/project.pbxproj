@@ -38,6 +38,9 @@
 		AA0000000000000000000120 /* EnrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000020 /* EnrollView.swift */; };
 		AA0000000000000000000121 /* EnrollWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000021 /* EnrollWindowController.swift */; };
 		AA0000000000000000000122 /* BehaviorSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000022 /* BehaviorSettings.swift */; };
+		AA0000000000000000000123 /* AuthCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000023 /* AuthCoordinator.swift */; };
+		AA0000000000000000000124 /* AuthGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000024 /* AuthGateView.swift */; };
+		AA0000000000000000000125 /* AuthLogService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000025 /* AuthLogService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -74,6 +77,9 @@
 		AA0000000000000000000020 /* EnrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnrollView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000021 /* EnrollWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnrollWindowController.swift; sourceTree = "<group>"; };
 		AA0000000000000000000022 /* BehaviorSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BehaviorSettings.swift; sourceTree = "<group>"; };
+		AA0000000000000000000023 /* AuthCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthCoordinator.swift; sourceTree = "<group>"; };
+		AA0000000000000000000024 /* AuthGateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthGateView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000025 /* AuthLogService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthLogService.swift; sourceTree = "<group>"; };
 		AA00000000000000000000FF /* LockGuard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LockGuard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -134,6 +140,7 @@
 				AA000000000000000000001E /* AuthOverlayView.swift */,
 				AA0000000000000000000020 /* EnrollView.swift */,
 				AA0000000000000000000021 /* EnrollWindowController.swift */,
+				AA0000000000000000000024 /* AuthGateView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -152,6 +159,8 @@
 				AA000000000000000000001C /* InstalledItems.swift */,
 				AA000000000000000000001F /* FolderLockService.swift */,
 				AA0000000000000000000022 /* BehaviorSettings.swift */,
+				AA0000000000000000000023 /* AuthCoordinator.swift */,
+				AA0000000000000000000025 /* AuthLogService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -283,6 +292,9 @@
 				AA0000000000000000000120 /* EnrollView.swift in Sources */,
 				AA0000000000000000000121 /* EnrollWindowController.swift in Sources */,
 				AA0000000000000000000122 /* BehaviorSettings.swift in Sources */,
+				AA0000000000000000000123 /* AuthCoordinator.swift in Sources */,
+				AA0000000000000000000124 /* AuthGateView.swift in Sources */,
+				AA0000000000000000000125 /* AuthLogService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
