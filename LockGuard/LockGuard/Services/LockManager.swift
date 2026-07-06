@@ -115,6 +115,32 @@ final class LockManager: ObservableObject {
         appLock.presentAddApps(completion: completion)
     }
 
+    // MARK: - In-app picker support
+
+    /// Lock a picked app (from the in-popover installed-apps list).
+    func lockPickedApp(_ item: PickableItem) {
+        if let bundleID = item.bundleID {
+            appLock.lockApp(bundleID: bundleID, name: item.name, path: item.path)
+        } else {
+            appLock.lockApp(at: item.url)
+        }
+    }
+
+    /// Is this app already locked? (for the picker's checkmark)
+    func isAppLocked(_ item: PickableItem) -> Bool {
+        guard let bundleID = item.bundleID else { return false }
+        return appLock.isLocked(bundleID: bundleID)
+    }
+
+    /// Lock a picked folder (from the in-popover subfolder list).
+    func lockPickedFolder(_ item: PickableItem) {
+        addFolder(at: item.url)
+    }
+
+    func isFolderLocked(_ item: PickableItem) -> Bool {
+        folders.contains { $0.path == item.path }
+    }
+
     /// Present an open panel to pick folders to guard. New items start locked.
     /// Uses the async `begin` API so it doesn't block the popover's run loop,
     /// and the panel auto-closes when the user is done.

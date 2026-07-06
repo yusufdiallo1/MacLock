@@ -63,18 +63,11 @@ final class StatusItemController: NSObject {
         popover.animates = true
         popover.delegate = self
 
-        // The picker callbacks are routed through the controller so it can
-        // suspend the popover's transient auto-dismiss while a modal panel is
-        // up — otherwise the panel taking focus would close the popover.
+        // Add-app/-folder now happens inline in the popover via PickerView, so
+        // there's no modal panel to coordinate here.
         let root = LockPopoverView(
             lockManager: lockManager,
             permissions: permissions,
-            onAddApps: { [weak self] in
-                self?.presentPicker { manager, done in manager.presentAddApps(completion: done) }
-            },
-            onAddFolders: { [weak self] in
-                self?.presentPicker { manager, done in manager.presentAddFolders(completion: done) }
-            },
             onShowSettings: { [weak self] in self?.showSettings() },
             onQuit: { [weak self] in self?.quit() }
         )
@@ -182,6 +175,7 @@ final class StatusItemController: NSObject {
 
     /// Gear button → the real Settings window (password, face unlock, kill switch).
     private func showSettings() {
+        NSLog("LockGuard[DEBUG]: gear tapped → showSettings() → presenting Settings window")
         closePopover()
         settingsWindow.present()
     }
