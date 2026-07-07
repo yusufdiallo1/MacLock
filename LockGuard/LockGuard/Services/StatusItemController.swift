@@ -112,12 +112,11 @@ final class StatusItemController: NSObject {
 
     private func updateAppearance() {
         guard let button = statusItem.button else { return }
-        // Clean template glyph — matches the face-scan logo, auto light/dark.
-        // The face-scan symbol when armed; a plain lock during setup.
-        let symbol = permissions.allGranted ? "faceid" : "lock.open"
-        button.image = lockImage(symbolName: symbol)
-        // A subtle colored tint on the whole (template) glyph conveys state
-        // without an awkward composited dot: red = auth pending.
+        // Always the face-scan glyph — matches the app icon/logo — regardless of
+        // setup state. Template image → auto light/dark in the menu bar.
+        button.image = lockImage(symbolName: "faceid")
+        // State conveyed by tint, not a different glyph: red when an app is
+        // pending auth, otherwise the plain template color.
         button.contentTintColor = authPending ? .systemRed : nil
     }
 
