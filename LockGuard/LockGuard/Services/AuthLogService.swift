@@ -25,6 +25,10 @@ final class AuthLogService: ObservableObject {
         let method: Method
         let success: Bool
         let context: String
+        /// Optional structured event type (e.g. "phishing_blocked") for events
+        /// beyond ordinary auth attempts. Optional + decoded-if-present so older
+        /// logs written before this field still decode.
+        var event: String? = nil
         var id: Date { timestamp }
     }
 
@@ -44,8 +48,8 @@ final class AuthLogService: ObservableObject {
         log(method: m, success: success, context: context)
     }
 
-    func log(method: Method, success: Bool, context: String) {
-        let entry = Entry(timestamp: Date(), method: method, success: success, context: context)
+    func log(method: Method, success: Bool, context: String, event: String? = nil) {
+        let entry = Entry(timestamp: Date(), method: method, success: success, context: context, event: event)
         entries.append(entry)
         // Persist the full set (small; re-encrypt whole log each write is fine).
         persist()

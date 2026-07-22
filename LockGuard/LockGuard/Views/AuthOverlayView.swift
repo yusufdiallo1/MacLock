@@ -49,6 +49,7 @@ struct AuthOverlayView: View {
             targetApp
             cameraCircle
             statusLine
+            secretIndicator
             divider
             passwordField
             authButton
@@ -144,6 +145,19 @@ struct AuthOverlayView: View {
         case .success:  return "Unlocked"
         case .failure:  return "Not recognized. Try your password."
         }
+    }
+
+    /// The per-install secret shown only in genuine LockGuard prompts — a fake
+    /// prompt can't know it, so its absence is the tell. Defends generic fakes.
+    private var secretIndicator: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "checkmark.seal.fill").font(.system(size: 11)).foregroundStyle(Theme.success)
+            Text("Your secret").font(.system(size: 10.5)).foregroundStyle(Theme.inkFaint)
+            Text(AntiSpoofService.shared.secretIndicator).font(.system(size: 13))
+            Text("· only genuine prompts show this").font(.system(size: 9.5)).foregroundStyle(Theme.inkFaint)
+        }
+        .padding(.horizontal, 10).padding(.vertical, 5)
+        .background(Capsule().fill(Theme.surface))
     }
 
     private var divider: some View {

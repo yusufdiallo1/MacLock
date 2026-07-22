@@ -21,6 +21,11 @@ extension Notification.Name {
     static let lockGuardShouldPresentAuthOverlay = Notification.Name(
         "com.lockguard.shouldPresentAuthOverlay"
     )
+    /// Posted when AntiSpoofService blocks a confirmed impostor instead of
+    /// presenting the auth overlay. `userInfo` carries the `LockedApp`.
+    static let lockGuardDidBlockImpostor = Notification.Name(
+        "com.lockguard.didBlockImpostor"
+    )
 }
 
 /// A locked application. Bundle ID is the identity; path + name are resolved
@@ -126,6 +131,26 @@ final class AppLockService: ObservableObject {
             let locked = lockedApp(for: bundleID)
         else { return }
 
+        // 0. Anti-spoof: verify the running process's signed identity against
+        //    the pinned one before we ever show the password prompt. A confirmed
+        //    impostor is denied outright — we never present the auth UI to it.
+        let trusted = lockedApps.map { (bundleID: $0.bundleID, name: $0.name,
+                                        teamID: CodeSignature.identity(forBundleAt: URL(fileURLWithPath: $0.path))?.teamID) }
+        let verdict = AntiSpoofService.shared.verify(
+            pid: app.processIdentifier, bundleID: bundleID, appName: locked.name, trustedApps: trusted)
+
+        if case .block = verdict {
+            // Deny: hide the impostor and don't present the genuine prompt (which
+            // would invite the user to type their password into a fake context).
+            challengingBundleID = nil
+            app.hide()
+            NotificationCenter.default.post(name: .lockGuardDidBlockImpostor, object: self,
+                                            userInfo: [Self.lockedAppUserInfoKey: locked])
+            return
+        }
+        // .warn and .allow both proceed to the normal prompt; .warn has already
+        // recorded a detection surfaced in the Security pane.
+
         // 1. Record which app was activated.
         challengingBundleID = bundleID
         pendingApp = locked
@@ -176,6 +201,11 @@ final class AppLockService: ObservableObject {
         lockedApps.append(
             LockedApp(bundleID: bundleID, name: resolvedName, path: resolvedPath ?? "")
         )
+        // Pin the app's signed identity so later activations can be verified
+        // against it (impostor detection).
+        if let p = resolvedPath {
+            AntiSpoofService.shared.pinIdentity(forBundleAt: URL(fileURLWithPath: p), bundleID: bundleID)
+        }
         save()
     }
 

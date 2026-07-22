@@ -47,6 +47,7 @@ struct AuthGateView: View {
             logo
             titleBlock
             if faceOffered { cameraBlock } else { lockedFaceBlock }
+            secretIndicator
             divider
             passwordBlock
             footer
@@ -69,6 +70,20 @@ struct AuthGateView: View {
         Image(systemName: "faceid")
             .font(.system(size: 30, weight: .regular))
             .foregroundStyle(accent)
+    }
+
+    /// The per-install secret shown only in genuine LockGuard prompts. If a user
+    /// ever sees a LockGuard-looking prompt WITHOUT their secret, it's a fake and
+    /// they should not type their password. Defends against generic fake prompts.
+    private var secretIndicator: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "checkmark.seal.fill").font(.system(size: 11)).foregroundStyle(Theme.success)
+            Text("Your secret").font(.system(size: 10.5)).foregroundStyle(Theme.inkFaint)
+            Text(AntiSpoofService.shared.secretIndicator).font(.system(size: 13))
+            Text("· only genuine prompts show this").font(.system(size: 9.5)).foregroundStyle(Theme.inkFaint)
+        }
+        .padding(.horizontal, 10).padding(.vertical, 5)
+        .background(Capsule().fill(Theme.surface))
     }
 
     private var titleBlock: some View {
