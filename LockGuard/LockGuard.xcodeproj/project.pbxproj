@@ -12,6 +12,7 @@
 		AA0000000000000000000103 /* Permission.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000003 /* Permission.swift */; };
 		AA0000000000000000000104 /* LaunchState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000004 /* LaunchState.swift */; };
 		AA0000000000000000000105 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000005 /* Theme.swift */; };
+		AA000000000000000000012A /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000002A /* Colors.swift */; };
 		AA0000000000000000000106 /* PermissionsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000006 /* PermissionsManager.swift */; };
 		AA0000000000000000000107 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000007 /* StatusItemController.swift */; };
 		AA0000000000000000000108 /* FaceRecognitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000008 /* FaceRecognitionService.swift */; };
@@ -53,6 +54,7 @@
 		AA0000000000000000000003 /* Permission.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Permission.swift; sourceTree = "<group>"; };
 		AA0000000000000000000004 /* LaunchState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchState.swift; sourceTree = "<group>"; };
 		AA0000000000000000000005 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		AA000000000000000000002A /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		AA0000000000000000000006 /* PermissionsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsManager.swift; sourceTree = "<group>"; };
 		AA0000000000000000000007 /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
 		AA0000000000000000000008 /* FaceRecognitionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceRecognitionService.swift; sourceTree = "<group>"; };
@@ -115,6 +117,7 @@
 			children = (
 				AA0000000000000000000001 /* LockGuardApp.swift */,
 				AA0000000000000000000002 /* AppDelegate.swift */,
+				AA0000000000000000000E07 /* DesignSystem */,
 				AA0000000000000000000E02 /* Models */,
 				AA0000000000000000000E03 /* Views */,
 				AA0000000000000000000E04 /* Services */,
@@ -122,6 +125,14 @@
 				AA0000000000000000000E06 /* Resources */,
 			);
 			path = LockGuard;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000E07 /* DesignSystem */ = {
+			isa = PBXGroup;
+			children = (
+				AA000000000000000000002A /* Colors.swift */,
+			);
+			path = DesignSystem;
 			sourceTree = "<group>";
 		};
 		AA0000000000000000000E02 /* Models */ = {
@@ -279,6 +290,7 @@
 				AA0000000000000000000103 /* Permission.swift in Sources */,
 				AA0000000000000000000104 /* LaunchState.swift in Sources */,
 				AA0000000000000000000105 /* Theme.swift in Sources */,
+				AA000000000000000000012A /* Colors.swift in Sources */,
 				AA0000000000000000000106 /* PermissionsManager.swift in Sources */,
 				AA0000000000000000000107 /* StatusItemController.swift in Sources */,
 				AA0000000000000000000108 /* FaceRecognitionService.swift in Sources */,

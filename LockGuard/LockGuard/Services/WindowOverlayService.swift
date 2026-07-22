@@ -128,7 +128,7 @@ final class WindowOverlayService {
             blur.material = .hudWindow
             blur.blendingMode = .behindWindow
             blur.state = .inactive          // minimal blur
-            blur.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.45).cgColor
+            blur.layer?.backgroundColor = NSColor.lgBgOverlayScrim.cgColor
         } else {
             blur.material = .hudWindow      // frosts the app window behind it
             blur.blendingMode = .behindWindow

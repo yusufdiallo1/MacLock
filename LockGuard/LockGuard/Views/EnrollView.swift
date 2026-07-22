@@ -95,8 +95,8 @@ struct EnrollView: View {
                 .frame(width: 190, height: 190)
 
             if isDone {
-                RoundedRectangle(cornerRadius: 20).fill(Color.green.opacity(0.22)).frame(width: 300, height: 220)
-                Image(systemName: "checkmark").font(.system(size: 56, weight: .bold)).foregroundStyle(.green)
+                RoundedRectangle(cornerRadius: 20).fill(Theme.success.opacity(0.22)).frame(width: 300, height: 220)
+                Image(systemName: "checkmark").font(.system(size: 56, weight: .bold)).foregroundStyle(Theme.success)
                     .transition(.scale.combined(with: .opacity))
             } else if let pose = face.enrollPose, pose != .center, face.faceDetected {
                 Image(systemName: pose.symbol).font(.system(size: 30, weight: .bold)).foregroundStyle(accent)

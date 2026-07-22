@@ -100,10 +100,10 @@ struct AuthGateView: View {
                     .strokeBorder(Color.white.opacity(0.6), lineWidth: 2)
                     .frame(width: 132, height: 132)
                 if didSucceed {
-                    RoundedRectangle(cornerRadius: 18).fill(Color.green.opacity(0.25))
+                    RoundedRectangle(cornerRadius: 18).fill(Theme.success.opacity(0.25))
                         .frame(width: 150, height: 150)
                     Image(systemName: "checkmark")
-                        .font(.system(size: 44, weight: .bold)).foregroundStyle(.green)
+                        .font(.system(size: 44, weight: .bold)).foregroundStyle(Theme.success)
                         .transition(.scale.combined(with: .opacity))
                 }
             }

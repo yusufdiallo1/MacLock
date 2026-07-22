@@ -117,10 +117,10 @@ struct AuthOverlayView: View {
 
             // success / failure overlays
             if phase == .success {
-                Circle().fill(Color.green.opacity(0.22)).frame(width: 122, height: 122)
+                Circle().fill(Theme.success.opacity(0.22)).frame(width: 122, height: 122)
                 Image(systemName: "checkmark")
                     .font(.system(size: 44, weight: .bold))
-                    .foregroundStyle(.green)
+                    .foregroundStyle(Theme.success)
                     .transition(.scale.combined(with: .opacity))
             } else if phase == .failure {
                 Circle().strokeBorder(.red, lineWidth: 3).frame(width: 122, height: 122)
@@ -132,7 +132,7 @@ struct AuthOverlayView: View {
     private var statusLine: some View {
         Text(statusText)
             .font(.system(size: 12.5))
-            .foregroundStyle(phase == .failure ? Color(hex: 0xE0675A) : Theme.inkMuted)
+            .foregroundStyle(phase == .failure ? Theme.danger : Theme.inkMuted)
             .animation(spring, value: statusText)
     }
 
@@ -199,9 +199,9 @@ struct AuthOverlayView: View {
             Button(action: onQuitApp) {
                 Label("Quit App", systemImage: "xmark.circle")
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(Color(hex: 0xE0675A))
+                    .foregroundStyle(Theme.danger)
                     .frame(maxWidth: .infinity).padding(.vertical, 8)
-                    .background(Capsule().strokeBorder(Color(hex: 0xE0675A).opacity(0.4), lineWidth: 1))
+                    .background(Capsule().strokeBorder(Theme.danger.opacity(0.4), lineWidth: 1))
             }
             .buttonStyle(.plain).focusable(false)
         }

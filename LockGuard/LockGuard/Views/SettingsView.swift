@@ -596,7 +596,7 @@ private struct AboutTab: View {
                     ForEach(log.entries.suffix(30).reversed()) { e in
                         HStack(spacing: 10) {
                             Image(systemName: e.success ? "checkmark.circle.fill" : "xmark.circle.fill")
-                                .font(.system(size: 13)).foregroundStyle(e.success ? Color.green : Theme.danger)
+                                .font(.system(size: 13)).foregroundStyle(e.success ? Theme.success : Theme.danger)
                             Image(systemName: e.method == .face ? "faceid" : "key.fill").font(.system(size: 11)).foregroundStyle(Theme.inkMuted)
                             Text(e.context.isEmpty ? (e.success ? "Unlocked" : "Failed") : e.context).font(.system(size: 12)).foregroundStyle(Theme.ink).lineLimit(1)
                             Spacer()

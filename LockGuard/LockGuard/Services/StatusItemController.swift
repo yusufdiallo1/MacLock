@@ -117,7 +117,7 @@ final class StatusItemController: NSObject {
         button.image = lockImage(symbolName: "faceid")
         // State conveyed by tint, not a different glyph: red when an app is
         // pending auth, otherwise the plain template color.
-        button.contentTintColor = authPending ? .systemRed : nil
+        button.contentTintColor = authPending ? NSColor.lgDanger : nil
     }
 
     /// Spring "lock closing" animation: a quick squash-and-settle on the button
