@@ -84,9 +84,9 @@ enum SettingsPane: String, CaseIterable, Identifiable {
     /// Whether a real, functional body exists today.
     var available: Bool {
         switch self {
-        case .apps, .folders, .authentication, .security, .behavior, .advanced:
+        case .apps, .folders, .authentication, .security, .behavior, .appearance, .advanced:
             return true
-        case .appearance, .sync, .notifications, .account:
+        case .sync, .notifications, .account:
             return false   // backing service arrives in a later prompt
         }
     }
@@ -101,6 +101,10 @@ struct SettingsView: View {
 
     @StateObject private var lockManager = LockManager.shared
     @StateObject private var behavior = BehaviorSettings.shared
+    /// Observed so a live accent/glass change in the Appearance pane repaints
+    /// the whole Settings tree — including panes that read the plain static
+    /// `Theme.accent` token.
+    @ObservedObject private var theme = ThemeStore.shared
 
     /// Persisted so re-opening Settings lands on the last pane the user used.
     @AppStorage("settings.lastPane") private var lastPaneRaw = SettingsPane.apps.rawValue

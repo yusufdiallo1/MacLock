@@ -11,41 +11,7 @@
 
 import SwiftUI
 
-// MARK: - Appearance (Prompt 37)
-
-struct AppearancePane: View {
-    var body: some View {
-        ComingSoonPane(
-            icon: "paintpalette.fill",
-            headline: "Live accent, glass intensity, contrast & motion",
-            detail: "You'll be able to change the accent color, dial glass intensity from subtle to vivid, toggle high-contrast and reduce-glass, and preview it all live."
-        ) {
-            // Real, already-true read-only content: the current design tokens.
-            GroupLabel(text: "Current Theme")
-            SettingsCard {
-                swatchRow("Accent (primary)", Color.lgAccentPrimary)
-                Divider().overlay(Theme.hairline.opacity(0.4)).padding(.vertical, 8)
-                swatchRow("Accent (secondary)", Color.lgAccentSecondary)
-                Divider().overlay(Theme.hairline.opacity(0.4)).padding(.vertical, 8)
-                swatchRow("Success", Color.lgSuccess)
-                Divider().overlay(Theme.hairline.opacity(0.4)).padding(.vertical, 8)
-                swatchRow("Warning", Color.lgWarning)
-                Divider().overlay(Theme.hairline.opacity(0.4)).padding(.vertical, 8)
-                swatchRow("Danger", Color.lgDanger)
-            }
-        }
-    }
-
-    private func swatchRow(_ name: String, _ color: Color) -> some View {
-        HStack(spacing: 12) {
-            RoundedRectangle(cornerRadius: 6, style: .continuous).fill(color)
-                .frame(width: 26, height: 26)
-                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Theme.hairline, lineWidth: 1))
-            Text(name).font(.system(size: 13, weight: .medium)).foregroundStyle(Theme.ink)
-            Spacer()
-        }
-    }
-}
+// Appearance (Prompt 37) is now a real pane — see AppearancePane.swift.
 
 // MARK: - Sync & Devices (Prompts 24 + 28)
 

@@ -22,12 +22,16 @@ enum Theme {
     static let inkFaint = Color.lgTextTertiary
 
     // Accent (purple) + soft variant
-    static let signal     = Color.lgAccentPrimary
-    static let signalSoft = Color.lgAccentPrimarySoft
-    static let accent     = Color.lgAccentPrimary
-    static let accentSoft = Color.lgAccentPrimarySoft
-    /// Gold secondary accent (Prompt 34).
-    static let accentSecondary = Color.lgAccentSecondary
+    // The accent family is user-tunable at runtime (Prompt 37) — these read the
+    // ThemeStore so changing the accent in the Appearance pane repaints the app
+    // without editing any of the ~53 `Theme.accent` call sites. Everything else
+    // in this file stays a static `let`; only the accent is adjustable.
+    static var signal: Color     { ThemeStore.shared.accent }
+    static var signalSoft: Color { ThemeStore.shared.accentSoft }
+    static var accent: Color     { ThemeStore.shared.accent }
+    static var accentSoft: Color { ThemeStore.shared.accentSoft }
+    /// Gold secondary accent (Prompt 34), paired to the chosen accent (Prompt 37).
+    static var accentSecondary: Color { ThemeStore.shared.accentSecondary }
 
     // Status
     static let success = Color.lgSuccess

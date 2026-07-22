@@ -12,6 +12,9 @@ import SwiftUI
 struct LockPopoverView: View {
     @ObservedObject var lockManager: LockManager
     @ObservedObject var permissions: PermissionsManager
+    /// Observed so a live accent/glass change repaints the popover, which reads
+    /// the plain static `Theme.accent` token throughout.
+    @ObservedObject private var theme = ThemeStore.shared
 
     var onShowSettings: () -> Void
     var onQuit: () -> Void

@@ -14,6 +14,7 @@
 		AA0000000000000000000105 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000005 /* Theme.swift */; };
 		AA000000000000000000012A /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000002A /* Colors.swift */; };
 		AA000000000000000000012B /* LiquidGlass.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000002B /* LiquidGlass.swift */; };
+		AA0000000000000000000135 /* ThemeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000035 /* ThemeStore.swift */; };
 		AA0000000000000000000106 /* PermissionsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000006 /* PermissionsManager.swift */; };
 		AA0000000000000000000107 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000007 /* StatusItemController.swift */; };
 		AA0000000000000000000108 /* FaceRecognitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000008 /* FaceRecognitionService.swift */; };
@@ -40,6 +41,7 @@
 		AA0000000000000000000132 /* BehaviorPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000032 /* BehaviorPane.swift */; };
 		AA0000000000000000000133 /* AdvancedPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000033 /* AdvancedPane.swift */; };
 		AA0000000000000000000134 /* ScaffoldPanes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000034 /* ScaffoldPanes.swift */; };
+		AA0000000000000000000136 /* AppearancePane.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000036 /* AppearancePane.swift */; };
 		AA000000000000000000011B /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001B /* SettingsWindowController.swift */; };
 		AA000000000000000000011C /* InstalledItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001C /* InstalledItems.swift */; };
 		AA000000000000000000011D /* PickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001D /* PickerView.swift */; };
@@ -65,6 +67,7 @@
 		AA0000000000000000000005 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		AA000000000000000000002A /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		AA000000000000000000002B /* LiquidGlass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidGlass.swift; sourceTree = "<group>"; };
+		AA0000000000000000000035 /* ThemeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeStore.swift; sourceTree = "<group>"; };
 		AA0000000000000000000006 /* PermissionsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsManager.swift; sourceTree = "<group>"; };
 		AA0000000000000000000007 /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
 		AA0000000000000000000008 /* FaceRecognitionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceRecognitionService.swift; sourceTree = "<group>"; };
@@ -93,6 +96,7 @@
 		AA0000000000000000000032 /* BehaviorPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BehaviorPane.swift; sourceTree = "<group>"; };
 		AA0000000000000000000033 /* AdvancedPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedPane.swift; sourceTree = "<group>"; };
 		AA0000000000000000000034 /* ScaffoldPanes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScaffoldPanes.swift; sourceTree = "<group>"; };
+		AA0000000000000000000036 /* AppearancePane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearancePane.swift; sourceTree = "<group>"; };
 		AA000000000000000000001B /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 		AA000000000000000000001C /* InstalledItems.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstalledItems.swift; sourceTree = "<group>"; };
 		AA000000000000000000001D /* PickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickerView.swift; sourceTree = "<group>"; };
@@ -151,6 +155,7 @@
 			children = (
 				AA000000000000000000002A /* Colors.swift */,
 				AA000000000000000000002B /* LiquidGlass.swift */,
+				AA0000000000000000000035 /* ThemeStore.swift */,
 			);
 			path = DesignSystem;
 			sourceTree = "<group>";
@@ -167,6 +172,7 @@
 				AA0000000000000000000032 /* BehaviorPane.swift */,
 				AA0000000000000000000033 /* AdvancedPane.swift */,
 				AA0000000000000000000034 /* ScaffoldPanes.swift */,
+				AA0000000000000000000036 /* AppearancePane.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -327,6 +333,7 @@
 				AA0000000000000000000105 /* Theme.swift in Sources */,
 				AA000000000000000000012A /* Colors.swift in Sources */,
 				AA000000000000000000012B /* LiquidGlass.swift in Sources */,
+				AA0000000000000000000135 /* ThemeStore.swift in Sources */,
 				AA0000000000000000000106 /* PermissionsManager.swift in Sources */,
 				AA0000000000000000000107 /* StatusItemController.swift in Sources */,
 				AA0000000000000000000108 /* FaceRecognitionService.swift in Sources */,
@@ -352,6 +359,7 @@
 				AA0000000000000000000132 /* BehaviorPane.swift in Sources */,
 				AA0000000000000000000133 /* AdvancedPane.swift in Sources */,
 				AA0000000000000000000134 /* ScaffoldPanes.swift in Sources */,
+				AA0000000000000000000136 /* AppearancePane.swift in Sources */,
 				AA000000000000000000011B /* SettingsWindowController.swift in Sources */,
 				AA000000000000000000011C /* InstalledItems.swift in Sources */,
 				AA000000000000000000011D /* PickerView.swift in Sources */,

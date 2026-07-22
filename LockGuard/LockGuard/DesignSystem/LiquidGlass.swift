@@ -67,27 +67,44 @@ struct LGGlass: ViewModifier {
     var preset: LGGlassPreset
     var interactive: Bool = false
 
+    @ObservedObject private var theme = ThemeStore.shared
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.accessibilityReduceMotion) private var reduceMotionOS
     @Environment(\.colorSchemeContrast) private var contrast
 
-    private var cfg: GlassConfig { preset.config }
-    private var shape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: cfg.cornerRadius, style: .continuous)
+    /// Effective accessibility flags: the OS setting OR the in-app toggle — an
+    /// in-app toggle can only ADD restriction, never override the OS asking for
+    /// less transparency/motion/contrast.
+    private var reduceGlassEffective: Bool { reduceTransparency || theme.reduceGlass }
+    private var contrastIncreased: Bool { contrast == .increased || theme.highContrast }
+    private var reduceMotionEffective: Bool { reduceMotionOS || theme.reduceMotionInApp }
+
+    /// The preset config modulated by the live glass-intensity setting: higher
+    /// intensity → stronger tint (more "vivid"); toward the floor the tint fades
+    /// so the surface reads closer to solid material.
+    private var cfg: GlassConfig {
+        var c = preset.config
+        let scale = 0.4 + theme.glassIntensity          // 0.4 … 1.4
+        c.tint = c.tint.opacity(scale)
+        return c
     }
-    /// Increase Contrast thickens every stroke in the system.
-    private var strokeWidth: CGFloat { contrast == .increased ? 1.5 : 1 }
+    private var shape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: cfg.cornerRadius, style: theme.cornerStyle)
+    }
+    /// Increase Contrast (OS or in-app) thickens every stroke in the system.
+    private var strokeWidth: CGFloat { contrastIncreased ? 1.5 : 1 }
 
     func body(content: Content) -> some View {
-        if reduceTransparency {
+        if reduceGlassEffective {
             // No glass, no sheen: a solid elevated surface with a hairline (or a
             // stronger stroke under Increase Contrast) so structure is still read.
             content
                 .background(shape.fill(Color.lgBgElevated))
-                .overlay(shape.strokeBorder(Color.lgHairline.opacity(contrast == .increased ? 0.9 : 1),
+                .overlay(shape.strokeBorder(Color.lgHairline.opacity(contrastIncreased ? 0.9 : 1),
                                             lineWidth: strokeWidth))
         } else {
             glassBody(content)
-                .modifier(InteractiveSheen(shape: shape, enabled: interactive))
+                .modifier(InteractiveSheen(shape: shape, enabled: interactive, reduceMotion: reduceMotionEffective))
                 .shadow(color: .black.opacity(0.5), radius: cfg.shadowRadius, y: cfg.shadowY)
         }
     }
@@ -171,8 +188,9 @@ private struct NSGlassView: NSViewRepresentable {
 private struct InteractiveSheen: ViewModifier {
     let shape: RoundedRectangle
     var enabled: Bool
+    /// Effective reduce-motion (OS OR in-app), passed from LGGlass.
+    var reduceMotion: Bool
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var hoverPoint: CGPoint?
     @State private var pressed = false
 
