@@ -13,20 +13,35 @@ struct LockPopoverView: View {
     @ObservedObject var lockManager: LockManager
     @ObservedObject var permissions: PermissionsManager
 
-    /// Hooks handed in by the popover controller. Picker presentation is routed
-    /// through the controller so it can suspend the popover's auto-dismiss.
-    var onAddApps: () -> Void
-    var onAddFolders: () -> Void
     var onShowSettings: () -> Void
     var onQuit: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// When non-.none, the popover shows the in-app app/folder picker instead
+    /// of the main list — no Finder open panel.
+    @State private var pickerMode: PickerMode = .none
 
     private var spring: Animation? {
         reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.75)
     }
 
     var body: some View {
+        Group {
+            if pickerMode == .none {
+                mainContent
+            } else {
+                PickerView(lockManager: lockManager, mode: pickerMode) {
+                    withAnimation(spring) { pickerMode = .none }
+                }
+            }
+        }
+        .frame(width: 320)
+        .frame(maxHeight: 520)
+        .glassSurface(cornerRadius: 20)
+        .onAppear { permissions.refreshAll() }
+    }
+
+    private var mainContent: some View {
         VStack(spacing: 0) {
             header
             lockAllButton
@@ -41,10 +56,6 @@ struct LockPopoverView: View {
             Divider().overlay(Theme.glassEdge)
             footer
         }
-        .frame(width: 320)
-        .frame(maxHeight: 520)
-        .glassSurface(cornerRadius: 20)
-        .onAppear { permissions.refreshAll() }
     }
 
     // MARK: - Header
@@ -111,6 +122,7 @@ struct LockPopoverView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .focusable(false)          // no macOS keyboard focus ring
         .disabled(lockManager.isEmpty)
         .opacity(lockManager.isEmpty ? 0.5 : 1)
     }
@@ -178,7 +190,12 @@ struct LockPopoverView: View {
                     .transition(.opacity.combined(with: .move(edge: .leading)))
                     .contextMenu {
                         Button(role: .destructive) {
-                            withAnimation(spring) { lockManager.remove(item) }
+                            // Face-required: deleting a locked app/folder needs auth.
+                            Task {
+                                if await AuthCoordinator.shared.requireAuth(reason: "Authenticate to remove \(item.name)") {
+                                    withAnimation(spring) { lockManager.remove(item) }
+                                }
+                            }
                         } label: {
                             Label("Stop Guarding", systemImage: "trash")
                         }
@@ -191,10 +208,10 @@ struct LockPopoverView: View {
     /// A quiet "＋ Add" affordance under the sections.
     private var addRow: some View {
         Menu {
-            Button(action: onAddApps) {
+            Button { withAnimation(spring) { pickerMode = .apps } } label: {
                 Label("Add Apps…", systemImage: "app.badge.checkmark")
             }
-            Button(action: onAddFolders) {
+            Button { withAnimation(spring) { pickerMode = .folders } } label: {
                 Label("Add Folders…", systemImage: "folder.badge.plus")
             }
         } label: {
@@ -232,10 +249,10 @@ struct LockPopoverView: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             Menu {
-                Button(action: onAddApps) {
+                Button { withAnimation(spring) { pickerMode = .apps } } label: {
                     Label("Add Apps…", systemImage: "app.badge.checkmark")
                 }
-                Button(action: onAddFolders) {
+                Button { withAnimation(spring) { pickerMode = .folders } } label: {
                     Label("Add Folders…", systemImage: "folder.badge.plus")
                 }
             } label: {

@@ -17,6 +17,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let permissions = PermissionsManager.shared
     // Held so its activation observer lives for the app's lifetime.
     private let appLock = AppLockService.shared
+    private let overlay = WindowOverlayService.shared
+    private let passwordAuth = PasswordAuthService.shared
+    // Held so its folder watchers live for the app's lifetime.
+    private let folderLock = FolderLockService.shared
+    private let enforcement = EnforcementService.shared
+    private var killSwitchMonitors: [Any] = []
     private var cancellables = Set<AnyCancellable>()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -30,6 +36,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         observeAuthOverlayRequests()
+        installKillSwitchHotkey()
+
+        // Hardening enforcement: accessibility-revocation watcher, lock-on-sleep,
+        // session timeout.
+        enforcement.onAccessibilityRevoked = { [weak self] in self?.presentOnboarding() }
+        enforcement.start()
+        // Reflect the persisted launch-at-login preference on disk.
+        LaunchAgentService.shared.setLaunchAtLogin(BehaviorSettings.shared.launchAtLogin)
 
         permissions.refreshAll()
 
@@ -38,28 +52,70 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    /// Bridge the enforcement pipeline to the (not-yet-built) auth overlay.
-    /// When a locked app is activated, AppLockService posts this notification;
-    /// for now we bring LockGuard forward and log which app tripped the lock.
-    /// Replace the body with the real overlay presentation once it exists.
+    /// Bridge the enforcement pipeline to the auth overlay. When a locked app
+    /// is activated, AppLockService posts this notification; we resolve the
+    /// running app's PID and present WindowOverlayService over its window.
     private func observeAuthOverlayRequests() {
         NotificationCenter.default.publisher(for: .lockGuardShouldPresentAuthOverlay)
             .receive(on: RunLoop.main)
             .sink { [weak self] note in
-                let app = note.userInfo?[AppLockService.lockedAppUserInfoKey] as? LockedApp
-                NSLog("LockGuard: locked app activated — %@", app?.bundleID ?? "unknown")
-                self?.presentAuthOverlayPlaceholder(for: app)
+                guard let app = note.userInfo?[AppLockService.lockedAppUserInfoKey] as? LockedApp
+                else { return }
+                self?.presentOverlay(for: app)
             }
             .store(in: &cancellables)
     }
 
-    private func presentAuthOverlayPlaceholder(for app: LockedApp?) {
-        // TODO: present the real full-screen auth overlay + face recognition,
-        // and call appLock.clearPending() when auth passes or is cancelled.
-        // We deliberately do NOT clear here: the challenge guard must stay set
-        // until the locked app deactivates, or focus bouncing back to it would
-        // re-fire immediately. Just surface LockGuard so the trigger is visible.
-        NSApp.activate(ignoringOtherApps: true)
+    private func presentOverlay(for app: LockedApp) {
+        // Resolve the running instance's PID from the bundle ID. If the app
+        // isn't actually running (rare race), there's nothing to cover.
+        guard let running = NSRunningApplication
+            .runningApplications(withBundleIdentifier: app.bundleID).first
+        else {
+            NSLog("LockGuard: %@ not running; nothing to overlay", app.bundleID)
+            appLock.clearPending()
+            return
+        }
+        // On resolve: success → grant a session of access for this app; cancel
+        // → just clear pending (the app was already hidden by the overlay).
+        let bundleID = app.bundleID
+        overlay.onResolved = { [weak self] success in
+            if success { self?.appLock.grantSession(bundleID: bundleID) }
+            else { self?.appLock.clearPending() }
+        }
+        overlay.present(forPID: running.processIdentifier, appName: app.name)
+    }
+
+    // MARK: - Emergency kill switch
+
+    /// Ctrl+Option+Shift+Delete, system-wide. A global monitor covers other
+    /// apps; a local monitor covers the case where LockGuard itself is focused.
+    /// Requires Accessibility permission for the global monitor to see keys in
+    /// other apps (already part of onboarding).
+    ///
+    /// LIMITATION: NSEvent global monitors are observe-only — they can't consume
+    /// the event. So when another app is frontmost, the combo also reaches that
+    /// app (Delete + modifiers). The kill switch still fires correctly; only the
+    /// keystroke isn't swallowed. Suppressing it system-wide would require a
+    /// CGEventTap. The local monitor DOES swallow it when LockGuard is focused.
+    private func installKillSwitchHotkey() {
+        let handler: (NSEvent) -> Bool = { [weak self] event in
+            let mods = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            let wanted: NSEvent.ModifierFlags = [.control, .option, .shift]
+            // keyCode 51 = Delete (Backspace). Require exactly the three mods.
+            guard event.keyCode == 51, mods == wanted else { return false }
+            self?.passwordAuth.triggerKillSwitch()
+            return true
+        }
+
+        let global = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { event in
+            _ = handler(event)
+        }
+        let local = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            // Swallow the event if it was our shortcut.
+            handler(event) ? nil : event
+        }
+        killSwitchMonitors = [global, local].compactMap { $0 }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {

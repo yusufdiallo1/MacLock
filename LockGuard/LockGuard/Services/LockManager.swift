@@ -13,12 +13,23 @@
 import AppKit
 import Combine
 
+extension Notification.Name {
+    /// Posted when everything is (re)locked — drives the menu-bar animation.
+    static let lockGuardDidLockAll = Notification.Name("com.lockguard.didLockAll")
+}
+
 @MainActor
 final class LockManager: ObservableObject {
     static let shared = LockManager()
 
     /// Guarded folders, in insertion order. Apps live in `appLock`.
     @Published private(set) var folders: [LockedItem] = []
+    /// Mirror of the app list so SwiftUI observes app changes through a real
+    /// @Published property. Kept in sync from `appLock.$lockedApps` below.
+    /// (Previously this was a manual `objectWillChange.send()`, which races the
+    /// synthesized publisher of `@Published folders` and could drop folder
+    /// updates — the folder-not-appearing bug.)
+    @Published private var appItems: [LockedItem] = []
 
     private let appLock: AppLockService
     private let defaultsKey = "LockGuard.lockedFolders.v1"
@@ -27,16 +38,23 @@ final class LockManager: ObservableObject {
     private init(appLock: AppLockService = .shared) {
         self.appLock = appLock
         load()
-        // Re-publish when the app list changes so the popover refreshes.
+        appItems = appLock.lockedItems
+        // Mirror the app list into our own @Published property so every
+        // observer refresh goes through one consistent publishing path.
         appLock.$lockedApps
-            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                self.appItems = self.appLock.lockedItems
+            }
             .store(in: &cancellables)
     }
 
     // MARK: - Derived state
 
-    /// Guarded applications, projected from AppLockService.
-    var apps: [LockedItem] { appLock.lockedItems }
+    /// Guarded applications, mirrored from AppLockService via `appItems` so the
+    /// value is delivered through a real @Published property.
+    var apps: [LockedItem] { appItems }
 
     /// Every guarded item, apps first.
     var allItems: [LockedItem] { apps + folders }
@@ -81,6 +99,8 @@ final class LockManager: ObservableObject {
     func lockAll() {
         for i in folders.indices { folders[i].isLocked = true }
         save()
+        // Drive the menu-bar lock-close animation.
+        NotificationCenter.default.post(name: .lockGuardDidLockAll, object: nil)
     }
 
     // MARK: - Removal
@@ -98,12 +118,40 @@ final class LockManager: ObservableObject {
     // MARK: - Adding via pickers
 
     /// Browse /Applications and lock the chosen apps (delegated to AppLockService).
-    func presentAddApps() {
-        appLock.presentAddApps()
+    func presentAddApps(completion: (() -> Void)? = nil) {
+        appLock.presentAddApps(completion: completion)
+    }
+
+    // MARK: - In-app picker support
+
+    /// Lock a picked app (from the in-popover installed-apps list).
+    func lockPickedApp(_ item: PickableItem) {
+        if let bundleID = item.bundleID {
+            appLock.lockApp(bundleID: bundleID, name: item.name, path: item.path)
+        } else {
+            appLock.lockApp(at: item.url)
+        }
+    }
+
+    /// Is this app already locked? (for the picker's checkmark)
+    func isAppLocked(_ item: PickableItem) -> Bool {
+        guard let bundleID = item.bundleID else { return false }
+        return appLock.isLocked(bundleID: bundleID)
+    }
+
+    /// Lock a picked folder (from the in-popover subfolder list).
+    func lockPickedFolder(_ item: PickableItem) {
+        addFolder(at: item.url)
+    }
+
+    func isFolderLocked(_ item: PickableItem) -> Bool {
+        folders.contains { $0.path == item.path }
     }
 
     /// Present an open panel to pick folders to guard. New items start locked.
-    func presentAddFolders() {
+    /// Uses the async `begin` API so it doesn't block the popover's run loop,
+    /// and the panel auto-closes when the user is done.
+    func presentAddFolders(completion: (() -> Void)? = nil) {
         let panel = NSOpenPanel()
         panel.title = "Choose Folders to Lock"
         panel.prompt = "Lock"
@@ -111,8 +159,12 @@ final class LockManager: ObservableObject {
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = true
 
-        guard panel.runModal() == .OK else { return }
-        for url in panel.urls { addFolder(at: url) }
+        panel.begin { [weak self] response in
+            if response == .OK {
+                for url in panel.urls { self?.addFolder(at: url) }
+            }
+            completion?()
+        }
     }
 
     private func addFolder(at url: URL) {

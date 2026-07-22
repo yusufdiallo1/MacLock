@@ -22,15 +22,23 @@ final class StatusItemController: NSObject {
     private let lockManager: LockManager
     private let popover: NSPopover
     private var eventMonitor: Any?
+    private let settingsWindow = SettingsWindowController()
     private var cancellables = Set<AnyCancellable>()
 
     /// True while a modal picker is up so `popoverDidClose` doesn't tear down
     /// state we intend to keep. See `runKeepingPopoverOpen`.
     private var isPresentingModal = false
 
-    init(permissions: PermissionsManager, lockManager: LockManager = .shared) {
+    private let appLock: AppLockService
+    /// True when a locked app is waiting for the user to authenticate.
+    private var authPending = false
+
+    init(permissions: PermissionsManager,
+         lockManager: LockManager = .shared,
+         appLock: AppLockService = .shared) {
         self.permissions = permissions
         self.lockManager = lockManager
+        self.appLock = appLock
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         self.popover = NSPopover()
         super.init()
@@ -44,15 +52,30 @@ final class StatusItemController: NSObject {
             .receive(on: RunLoop.main)
             .sink { [weak self] _, _ in self?.updateAppearance() }
             .store(in: &cancellables)
+
+        // Status dot: red while a locked app is pending authentication.
+        appLock.$pendingApp
+            .receive(on: RunLoop.main)
+            .sink { [weak self] pending in
+                self?.authPending = (pending != nil)
+                self?.updateAppearance()
+            }
+            .store(in: &cancellables)
+
+        // Play the lock-close animation whenever everything (re)locks.
+        NotificationCenter.default.publisher(for: .lockGuardDidLockAll)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.playLockAnimation() }
+            .store(in: &cancellables)
     }
 
     private func configureButton() {
         guard let button = statusItem.button else { return }
-        button.image = lockImage(armed: permissions.allGranted)
-        button.image?.isTemplate = true
+        button.wantsLayer = true
         button.toolTip = "LockGuard"
         button.action = #selector(togglePopover)
         button.target = self
+        updateAppearance()
     }
 
     private func configurePopover() {
@@ -62,15 +85,12 @@ final class StatusItemController: NSObject {
         popover.animates = true
         popover.delegate = self
 
-        // The picker callbacks are routed through the controller so it can
-        // suspend the popover's transient auto-dismiss while a modal panel is
-        // up — otherwise the panel taking focus would close the popover.
+        // Add-app/-folder now happens inline in the popover via PickerView, so
+        // there's no modal panel to coordinate here.
         let root = LockPopoverView(
             lockManager: lockManager,
             permissions: permissions,
-            onAddApps: { [weak self] in self?.presentPicker { $0.presentAddApps() } },
-            onAddFolders: { [weak self] in self?.presentPicker { $0.presentAddFolders() } },
-            onShowSettings: { [weak self] in self?.showOnboarding() },
+            onShowSettings: { [weak self] in self?.showSettings() },
             onQuit: { [weak self] in self?.quit() }
         )
 
@@ -80,17 +100,39 @@ final class StatusItemController: NSObject {
         popover.contentSize = NSSize(width: 320, height: 420)
     }
 
-    /// Custom SF Symbol lock icon; closed + shielded when armed, open when not.
-    private func lockImage(armed: Bool) -> NSImage? {
-        let symbol = armed ? "lock.shield.fill" : "lock.open"
+    /// The base lock symbol. `lock.shield` when armed (per spec), `lock.open`
+    /// when setup is incomplete. Template image → auto light/dark.
+    private func lockImage(symbolName: String) -> NSImage? {
         let config = NSImage.SymbolConfiguration(pointSize: 15, weight: .medium)
-        return NSImage(systemSymbolName: symbol, accessibilityDescription: "LockGuard")?
+        let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "LockGuard")?
             .withSymbolConfiguration(config)
+        image?.isTemplate = true
+        return image
     }
 
     private func updateAppearance() {
-        statusItem.button?.image = lockImage(armed: permissions.allGranted)
-        statusItem.button?.image?.isTemplate = true
+        guard let button = statusItem.button else { return }
+        // Always the face-scan glyph — matches the app icon/logo — regardless of
+        // setup state. Template image → auto light/dark in the menu bar.
+        button.image = lockImage(symbolName: "faceid")
+        // State conveyed by tint, not a different glyph: red when an app is
+        // pending auth, otherwise the plain template color.
+        button.contentTintColor = authPending ? NSColor.lgDanger : nil
+    }
+
+    /// Spring "lock closing" animation: a quick squash-and-settle on the button
+    /// layer, played when apps are (re)locked.
+    func playLockAnimation() {
+        guard let layer = statusItem.button?.layer else { return }
+        let spring = CASpringAnimation(keyPath: "transform.scale")
+        spring.fromValue = 0.7
+        spring.toValue = 1.0
+        spring.damping = 8
+        spring.stiffness = 180
+        spring.mass = 0.4
+        spring.initialVelocity = 6
+        spring.duration = spring.settlingDuration
+        layer.add(spring, forKey: "lockBounce")
     }
 
     // MARK: - Popover presentation
@@ -141,23 +183,29 @@ final class StatusItemController: NSObject {
 
     // MARK: - Modal pickers
 
-    /// Present a modal picker without the popover dismissing underneath it.
-    /// `.transient` closes the popover the instant the panel takes key focus,
-    /// so we drop to `.applicationDefined`, disarm the outside-click monitor
-    /// for the duration, run the (blocking) picker, then restore both.
-    private func presentPicker(_ body: @escaping (LockManager) -> Void) {
+    /// Present an async file picker without the popover dismissing underneath
+    /// it. `.transient` closes the popover the instant the panel takes key
+    /// focus, so we drop to `.applicationDefined` and disarm the outside-click
+    /// monitor while the panel is open, then restore both in the completion.
+    /// The picker uses `begin` (not `runModal`), so the popover's run loop keeps
+    /// spinning and SwiftUI still updates as items are added.
+    ///
+    /// `body` receives the LockManager and a completion it must call when the
+    /// panel finishes.
+    private func presentPicker(_ body: @escaping (LockManager, @escaping () -> Void) -> Void) {
         isPresentingModal = true
         stopMonitoringOutsideClicks()
         popover.behavior = .applicationDefined
 
-        body(lockManager)
-
-        popover.behavior = .transient
-        isPresentingModal = false
-        // Re-arm only if the popover is still on screen after the picker.
-        if popover.isShown {
-            popover.contentViewController?.view.window?.makeKey()
-            startMonitoringOutsideClicks()
+        body(lockManager) { [weak self] in
+            guard let self else { return }
+            self.popover.behavior = .transient
+            self.isPresentingModal = false
+            // Re-arm only if the popover is still on screen after the picker.
+            if self.popover.isShown {
+                self.popover.contentViewController?.view.window?.makeKey()
+                self.startMonitoringOutsideClicks()
+            }
         }
     }
 
@@ -167,6 +215,16 @@ final class StatusItemController: NSObject {
         closePopover()
         permissions.refreshAll()
         onShowOnboarding?()
+    }
+
+    /// Gear button → authenticate, then open the real Settings window.
+    private func showSettings() {
+        closePopover()
+        Task {
+            if await AuthCoordinator.shared.requireAuth(reason: "Authenticate to open Settings") {
+                settingsWindow.present()
+            }
+        }
     }
 
     private func quit() {

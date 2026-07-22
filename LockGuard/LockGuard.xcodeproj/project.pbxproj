@@ -12,6 +12,8 @@
 		AA0000000000000000000103 /* Permission.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000003 /* Permission.swift */; };
 		AA0000000000000000000104 /* LaunchState.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000004 /* LaunchState.swift */; };
 		AA0000000000000000000105 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000005 /* Theme.swift */; };
+		AA000000000000000000012A /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000002A /* Colors.swift */; };
+		AA000000000000000000012B /* LiquidGlass.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000002B /* LiquidGlass.swift */; };
 		AA0000000000000000000106 /* PermissionsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000006 /* PermissionsManager.swift */; };
 		AA0000000000000000000107 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000007 /* StatusItemController.swift */; };
 		AA0000000000000000000108 /* FaceRecognitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000008 /* FaceRecognitionService.swift */; };
@@ -25,6 +27,26 @@
 		AA0000000000000000000113 /* LockRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000013 /* LockRow.swift */; };
 		AA0000000000000000000114 /* LockPopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000014 /* LockPopoverView.swift */; };
 		AA0000000000000000000115 /* AppLockService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000015 /* AppLockService.swift */; };
+		AA0000000000000000000116 /* WindowOverlayService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000016 /* WindowOverlayService.swift */; };
+		AA0000000000000000000117 /* AuthOverlayCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000017 /* AuthOverlayCardView.swift */; };
+		AA0000000000000000000118 /* FaceAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000018 /* FaceAuthService.swift */; };
+		AA0000000000000000000119 /* PasswordAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000019 /* PasswordAuthService.swift */; };
+		AA000000000000000000011A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001A /* SettingsView.swift */; };
+		AA000000000000000000011B /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001B /* SettingsWindowController.swift */; };
+		AA000000000000000000011C /* InstalledItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001C /* InstalledItems.swift */; };
+		AA000000000000000000011D /* PickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001D /* PickerView.swift */; };
+		AA000000000000000000011E /* AuthOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001E /* AuthOverlayView.swift */; };
+		AA000000000000000000011F /* FolderLockService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001F /* FolderLockService.swift */; };
+		AA0000000000000000000120 /* EnrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000020 /* EnrollView.swift */; };
+		AA0000000000000000000121 /* EnrollWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000021 /* EnrollWindowController.swift */; };
+		AA0000000000000000000122 /* BehaviorSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000022 /* BehaviorSettings.swift */; };
+		AA0000000000000000000123 /* AuthCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000023 /* AuthCoordinator.swift */; };
+		AA0000000000000000000124 /* AuthGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000024 /* AuthGateView.swift */; };
+		AA0000000000000000000125 /* AuthLogService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000025 /* AuthLogService.swift */; };
+		AA0000000000000000000126 /* LaunchAgentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000026 /* LaunchAgentService.swift */; };
+		AA0000000000000000000127 /* FaceProfileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000027 /* FaceProfileStore.swift */; };
+		AA0000000000000000000128 /* EnforcementService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000028 /* EnforcementService.swift */; };
+		AA0000000000000000000129 /* KeyableWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000029 /* KeyableWindow.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +55,8 @@
 		AA0000000000000000000003 /* Permission.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Permission.swift; sourceTree = "<group>"; };
 		AA0000000000000000000004 /* LaunchState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchState.swift; sourceTree = "<group>"; };
 		AA0000000000000000000005 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		AA000000000000000000002A /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
+		AA000000000000000000002B /* LiquidGlass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidGlass.swift; sourceTree = "<group>"; };
 		AA0000000000000000000006 /* PermissionsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsManager.swift; sourceTree = "<group>"; };
 		AA0000000000000000000007 /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
 		AA0000000000000000000008 /* FaceRecognitionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceRecognitionService.swift; sourceTree = "<group>"; };
@@ -48,6 +72,26 @@
 		AA0000000000000000000013 /* LockRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockRow.swift; sourceTree = "<group>"; };
 		AA0000000000000000000014 /* LockPopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockPopoverView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000015 /* AppLockService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLockService.swift; sourceTree = "<group>"; };
+		AA0000000000000000000016 /* WindowOverlayService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowOverlayService.swift; sourceTree = "<group>"; };
+		AA0000000000000000000017 /* AuthOverlayCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthOverlayCardView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000018 /* FaceAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceAuthService.swift; sourceTree = "<group>"; };
+		AA0000000000000000000019 /* PasswordAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordAuthService.swift; sourceTree = "<group>"; };
+		AA000000000000000000001A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		AA000000000000000000001B /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
+		AA000000000000000000001C /* InstalledItems.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstalledItems.swift; sourceTree = "<group>"; };
+		AA000000000000000000001D /* PickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickerView.swift; sourceTree = "<group>"; };
+		AA000000000000000000001E /* AuthOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthOverlayView.swift; sourceTree = "<group>"; };
+		AA000000000000000000001F /* FolderLockService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderLockService.swift; sourceTree = "<group>"; };
+		AA0000000000000000000020 /* EnrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnrollView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000021 /* EnrollWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnrollWindowController.swift; sourceTree = "<group>"; };
+		AA0000000000000000000022 /* BehaviorSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BehaviorSettings.swift; sourceTree = "<group>"; };
+		AA0000000000000000000023 /* AuthCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthCoordinator.swift; sourceTree = "<group>"; };
+		AA0000000000000000000024 /* AuthGateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthGateView.swift; sourceTree = "<group>"; };
+		AA0000000000000000000025 /* AuthLogService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthLogService.swift; sourceTree = "<group>"; };
+		AA0000000000000000000026 /* LaunchAgentService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAgentService.swift; sourceTree = "<group>"; };
+		AA0000000000000000000027 /* FaceProfileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceProfileStore.swift; sourceTree = "<group>"; };
+		AA0000000000000000000028 /* EnforcementService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnforcementService.swift; sourceTree = "<group>"; };
+		AA0000000000000000000029 /* KeyableWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyableWindow.swift; sourceTree = "<group>"; };
 		AA00000000000000000000FF /* LockGuard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LockGuard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -75,6 +119,7 @@
 			children = (
 				AA0000000000000000000001 /* LockGuardApp.swift */,
 				AA0000000000000000000002 /* AppDelegate.swift */,
+				AA0000000000000000000E07 /* DesignSystem */,
 				AA0000000000000000000E02 /* Models */,
 				AA0000000000000000000E03 /* Views */,
 				AA0000000000000000000E04 /* Services */,
@@ -82,6 +127,15 @@
 				AA0000000000000000000E06 /* Resources */,
 			);
 			path = LockGuard;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000E07 /* DesignSystem */ = {
+			isa = PBXGroup;
+			children = (
+				AA000000000000000000002A /* Colors.swift */,
+				AA000000000000000000002B /* LiquidGlass.swift */,
+			);
+			path = DesignSystem;
 			sourceTree = "<group>";
 		};
 		AA0000000000000000000E02 /* Models */ = {
@@ -101,6 +155,14 @@
 				AA000000000000000000000B /* OnboardingWindowController.swift */,
 				AA0000000000000000000013 /* LockRow.swift */,
 				AA0000000000000000000014 /* LockPopoverView.swift */,
+				AA0000000000000000000017 /* AuthOverlayCardView.swift */,
+				AA000000000000000000001A /* SettingsView.swift */,
+				AA000000000000000000001B /* SettingsWindowController.swift */,
+				AA000000000000000000001D /* PickerView.swift */,
+				AA000000000000000000001E /* AuthOverlayView.swift */,
+				AA0000000000000000000020 /* EnrollView.swift */,
+				AA0000000000000000000021 /* EnrollWindowController.swift */,
+				AA0000000000000000000024 /* AuthGateView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -113,6 +175,17 @@
 				AA0000000000000000000008 /* FaceRecognitionService.swift */,
 				AA0000000000000000000011 /* LockManager.swift */,
 				AA0000000000000000000015 /* AppLockService.swift */,
+				AA0000000000000000000016 /* WindowOverlayService.swift */,
+				AA0000000000000000000018 /* FaceAuthService.swift */,
+				AA0000000000000000000019 /* PasswordAuthService.swift */,
+				AA000000000000000000001C /* InstalledItems.swift */,
+				AA000000000000000000001F /* FolderLockService.swift */,
+				AA0000000000000000000022 /* BehaviorSettings.swift */,
+				AA0000000000000000000023 /* AuthCoordinator.swift */,
+				AA0000000000000000000025 /* AuthLogService.swift */,
+				AA0000000000000000000026 /* LaunchAgentService.swift */,
+				AA0000000000000000000027 /* FaceProfileStore.swift */,
+				AA0000000000000000000028 /* EnforcementService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -123,6 +196,7 @@
 				AA0000000000000000000004 /* LaunchState.swift */,
 				AA0000000000000000000005 /* Theme.swift */,
 				AA0000000000000000000012 /* GlassBackground.swift */,
+				AA0000000000000000000029 /* KeyableWindow.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -219,6 +293,8 @@
 				AA0000000000000000000103 /* Permission.swift in Sources */,
 				AA0000000000000000000104 /* LaunchState.swift in Sources */,
 				AA0000000000000000000105 /* Theme.swift in Sources */,
+				AA000000000000000000012A /* Colors.swift in Sources */,
+				AA000000000000000000012B /* LiquidGlass.swift in Sources */,
 				AA0000000000000000000106 /* PermissionsManager.swift in Sources */,
 				AA0000000000000000000107 /* StatusItemController.swift in Sources */,
 				AA0000000000000000000108 /* FaceRecognitionService.swift in Sources */,
@@ -231,6 +307,26 @@
 				AA0000000000000000000113 /* LockRow.swift in Sources */,
 				AA0000000000000000000114 /* LockPopoverView.swift in Sources */,
 				AA0000000000000000000115 /* AppLockService.swift in Sources */,
+				AA0000000000000000000116 /* WindowOverlayService.swift in Sources */,
+				AA0000000000000000000117 /* AuthOverlayCardView.swift in Sources */,
+				AA0000000000000000000118 /* FaceAuthService.swift in Sources */,
+				AA0000000000000000000119 /* PasswordAuthService.swift in Sources */,
+				AA000000000000000000011A /* SettingsView.swift in Sources */,
+				AA000000000000000000011B /* SettingsWindowController.swift in Sources */,
+				AA000000000000000000011C /* InstalledItems.swift in Sources */,
+				AA000000000000000000011D /* PickerView.swift in Sources */,
+				AA000000000000000000011E /* AuthOverlayView.swift in Sources */,
+				AA000000000000000000011F /* FolderLockService.swift in Sources */,
+				AA0000000000000000000120 /* EnrollView.swift in Sources */,
+				AA0000000000000000000121 /* EnrollWindowController.swift in Sources */,
+				AA0000000000000000000122 /* BehaviorSettings.swift in Sources */,
+				AA0000000000000000000123 /* AuthCoordinator.swift in Sources */,
+				AA0000000000000000000124 /* AuthGateView.swift in Sources */,
+				AA0000000000000000000125 /* AuthLogService.swift in Sources */,
+				AA0000000000000000000126 /* LaunchAgentService.swift in Sources */,
+				AA0000000000000000000127 /* FaceProfileStore.swift in Sources */,
+				AA0000000000000000000128 /* EnforcementService.swift in Sources */,
+				AA0000000000000000000129 /* KeyableWindow.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -291,7 +387,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = LockGuard/Resources/LockGuard.entitlements;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "LockGuard Dev";
+				CODE_SIGN_STYLE = Manual;
+				ENABLE_DEBUG_DYLIB = NO;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -314,7 +412,9 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = LockGuard/Resources/LockGuard.entitlements;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "LockGuard Dev";
+				CODE_SIGN_STYLE = Manual;
+				ENABLE_DEBUG_DYLIB = NO;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_HARDENED_RUNTIME = YES;

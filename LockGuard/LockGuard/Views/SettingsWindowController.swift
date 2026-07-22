@@ -1,33 +1,26 @@
 //
-//  OnboardingWindowController.swift
+//  SettingsWindowController.swift
 //  LockGuard
 //
-//  Hosts the SwiftUI onboarding view in a borderless, centered panel. Because
-//  LockGuard is an accessory app with no main window, this controller also
-//  temporarily brings the app forward so the panel takes focus.
+//  Hosts SettingsView in a titled window, opened from the popover's gear
+//  button. Reuses the shared service singletons so changes take effect live.
 //
 
 import AppKit
 import SwiftUI
 
 @MainActor
-final class OnboardingWindowController {
+final class SettingsWindowController {
 
     private var window: NSWindow?
-    private let permissions: PermissionsManager
-    private let onFinish: () -> Void
-
-    init(permissions: PermissionsManager, onFinish: @escaping () -> Void) {
-        self.permissions = permissions
-        self.onFinish = onFinish
-    }
 
     func present() {
         if window == nil {
-            let root = OnboardingView(permissions: permissions) { [weak self] in
-                self?.dismiss()
-            }
-
+            let root = SettingsView(
+                password: .shared,
+                face: .shared,
+                onClose: { [weak self] in self?.dismiss() }
+            )
             let hosting = NSHostingController(rootView: root)
             let window = NSWindow(contentViewController: hosting)
             window.styleMask = [.titled, .fullSizeContentView, .closable]
@@ -40,7 +33,6 @@ final class OnboardingWindowController {
             window.isReleasedWhenClosed = false
             self.window = window
         }
-
         NSApp.activate(ignoringOtherApps: true)
         window?.center()   // always re-center on present
         window?.makeKeyAndOrderFront(nil)
@@ -49,6 +41,5 @@ final class OnboardingWindowController {
     private func dismiss() {
         window?.close()
         window = nil
-        onFinish()
     }
 }
