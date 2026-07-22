@@ -78,8 +78,7 @@ struct SettingsView: View {
             .padding(.horizontal, 16).padding(.bottom, 16)
         }
         .frame(width: 210)
-        .background(.ultraThinMaterial)
-        .overlay(Theme.glassTint)
+        .lgGlass(.panel)
         .overlay(Rectangle().fill(Theme.hairline).frame(width: 1), alignment: .trailing)
     }
 

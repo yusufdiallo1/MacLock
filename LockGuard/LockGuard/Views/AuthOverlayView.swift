@@ -57,7 +57,7 @@ struct AuthOverlayView: View {
         .padding(.horizontal, 34)
         .padding(.vertical, 30)
         .frame(width: 360)
-        .background(cardBackground)
+        .lgGlass(.card)
         .scaleEffect(appeared ? 1 : 0.94)
         .opacity(appeared ? 1 : 0)
         .offset(x: shake)
@@ -205,21 +205,6 @@ struct AuthOverlayView: View {
             }
             .buttonStyle(.plain).focusable(false)
         }
-    }
-
-    private var cardBackground: some View {
-        let shape = RoundedRectangle(cornerRadius: 24, style: .continuous)
-        return shape
-            .fill(.ultraThinMaterial)
-            .overlay(shape.fill(Theme.glassTint))
-            .overlay(
-                shape.strokeBorder(
-                    LinearGradient(colors: [accent.opacity(0.4), Theme.glassEdge.opacity(0)],
-                                   startPoint: .top, endPoint: .bottom),
-                    lineWidth: 1
-                )
-            )
-            .shadow(color: .black.opacity(0.55), radius: 34, y: 20)
     }
 
     // MARK: - Behavior
