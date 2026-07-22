@@ -31,7 +31,15 @@
 		AA0000000000000000000117 /* AuthOverlayCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000017 /* AuthOverlayCardView.swift */; };
 		AA0000000000000000000118 /* FaceAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000018 /* FaceAuthService.swift */; };
 		AA0000000000000000000119 /* PasswordAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000019 /* PasswordAuthService.swift */; };
-		AA000000000000000000011A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001A /* SettingsView.swift */; };
+		AA000000000000000000012C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000002C /* SettingsView.swift */; };
+		AA000000000000000000012D /* SettingsChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000002D /* SettingsChrome.swift */; };
+		AA000000000000000000012E /* LockedAppsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000002E /* LockedAppsPane.swift */; };
+		AA000000000000000000012F /* LockedFoldersPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000002F /* LockedFoldersPane.swift */; };
+		AA0000000000000000000130 /* AuthenticationPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000030 /* AuthenticationPane.swift */; };
+		AA0000000000000000000131 /* SecurityPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000031 /* SecurityPane.swift */; };
+		AA0000000000000000000132 /* BehaviorPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000032 /* BehaviorPane.swift */; };
+		AA0000000000000000000133 /* AdvancedPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000033 /* AdvancedPane.swift */; };
+		AA0000000000000000000134 /* ScaffoldPanes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000000000000000000034 /* ScaffoldPanes.swift */; };
 		AA000000000000000000011B /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001B /* SettingsWindowController.swift */; };
 		AA000000000000000000011C /* InstalledItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001C /* InstalledItems.swift */; };
 		AA000000000000000000011D /* PickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000000000000000000001D /* PickerView.swift */; };
@@ -76,7 +84,15 @@
 		AA0000000000000000000017 /* AuthOverlayCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthOverlayCardView.swift; sourceTree = "<group>"; };
 		AA0000000000000000000018 /* FaceAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceAuthService.swift; sourceTree = "<group>"; };
 		AA0000000000000000000019 /* PasswordAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordAuthService.swift; sourceTree = "<group>"; };
-		AA000000000000000000001A /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		AA000000000000000000002C /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		AA000000000000000000002D /* SettingsChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsChrome.swift; sourceTree = "<group>"; };
+		AA000000000000000000002E /* LockedAppsPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockedAppsPane.swift; sourceTree = "<group>"; };
+		AA000000000000000000002F /* LockedFoldersPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockedFoldersPane.swift; sourceTree = "<group>"; };
+		AA0000000000000000000030 /* AuthenticationPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationPane.swift; sourceTree = "<group>"; };
+		AA0000000000000000000031 /* SecurityPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityPane.swift; sourceTree = "<group>"; };
+		AA0000000000000000000032 /* BehaviorPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BehaviorPane.swift; sourceTree = "<group>"; };
+		AA0000000000000000000033 /* AdvancedPane.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedPane.swift; sourceTree = "<group>"; };
+		AA0000000000000000000034 /* ScaffoldPanes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScaffoldPanes.swift; sourceTree = "<group>"; };
 		AA000000000000000000001B /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 		AA000000000000000000001C /* InstalledItems.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstalledItems.swift; sourceTree = "<group>"; };
 		AA000000000000000000001D /* PickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PickerView.swift; sourceTree = "<group>"; };
@@ -120,6 +136,7 @@
 				AA0000000000000000000001 /* LockGuardApp.swift */,
 				AA0000000000000000000002 /* AppDelegate.swift */,
 				AA0000000000000000000E07 /* DesignSystem */,
+				AA0000000000000000000E08 /* Settings */,
 				AA0000000000000000000E02 /* Models */,
 				AA0000000000000000000E03 /* Views */,
 				AA0000000000000000000E04 /* Services */,
@@ -136,6 +153,22 @@
 				AA000000000000000000002B /* LiquidGlass.swift */,
 			);
 			path = DesignSystem;
+			sourceTree = "<group>";
+		};
+		AA0000000000000000000E08 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				AA000000000000000000002C /* SettingsView.swift */,
+				AA000000000000000000002D /* SettingsChrome.swift */,
+				AA000000000000000000002E /* LockedAppsPane.swift */,
+				AA000000000000000000002F /* LockedFoldersPane.swift */,
+				AA0000000000000000000030 /* AuthenticationPane.swift */,
+				AA0000000000000000000031 /* SecurityPane.swift */,
+				AA0000000000000000000032 /* BehaviorPane.swift */,
+				AA0000000000000000000033 /* AdvancedPane.swift */,
+				AA0000000000000000000034 /* ScaffoldPanes.swift */,
+			);
+			path = Settings;
 			sourceTree = "<group>";
 		};
 		AA0000000000000000000E02 /* Models */ = {
@@ -156,7 +189,6 @@
 				AA0000000000000000000013 /* LockRow.swift */,
 				AA0000000000000000000014 /* LockPopoverView.swift */,
 				AA0000000000000000000017 /* AuthOverlayCardView.swift */,
-				AA000000000000000000001A /* SettingsView.swift */,
 				AA000000000000000000001B /* SettingsWindowController.swift */,
 				AA000000000000000000001D /* PickerView.swift */,
 				AA000000000000000000001E /* AuthOverlayView.swift */,
@@ -311,7 +343,15 @@
 				AA0000000000000000000117 /* AuthOverlayCardView.swift in Sources */,
 				AA0000000000000000000118 /* FaceAuthService.swift in Sources */,
 				AA0000000000000000000119 /* PasswordAuthService.swift in Sources */,
-				AA000000000000000000011A /* SettingsView.swift in Sources */,
+				AA000000000000000000012C /* SettingsView.swift in Sources */,
+				AA000000000000000000012D /* SettingsChrome.swift in Sources */,
+				AA000000000000000000012E /* LockedAppsPane.swift in Sources */,
+				AA000000000000000000012F /* LockedFoldersPane.swift in Sources */,
+				AA0000000000000000000130 /* AuthenticationPane.swift in Sources */,
+				AA0000000000000000000131 /* SecurityPane.swift in Sources */,
+				AA0000000000000000000132 /* BehaviorPane.swift in Sources */,
+				AA0000000000000000000133 /* AdvancedPane.swift in Sources */,
+				AA0000000000000000000134 /* ScaffoldPanes.swift in Sources */,
 				AA000000000000000000011B /* SettingsWindowController.swift in Sources */,
 				AA000000000000000000011C /* InstalledItems.swift in Sources */,
 				AA000000000000000000011D /* PickerView.swift in Sources */,

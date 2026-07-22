@@ -92,6 +92,26 @@ final class BehaviorSettings: ObservableObject {
         deletionProtectionEnabled = d.bool(forKey: "LG.deletionProtection")
     }
 
+    /// Re-read every setting from UserDefaults. Used by the Advanced pane after
+    /// an import or a reset-to-defaults so the published values (and the UI)
+    /// reflect the new backing store. Assignments harmlessly re-persist the same
+    /// values via each property's `didSet`.
+    func reload() {
+        let d = UserDefaults.standard
+        sessionTimeoutMinutes = d.object(forKey: "LG.sessionTimeout") as? Double ?? 5
+        lockOnSleep = d.object(forKey: "LG.lockOnSleep") as? Bool ?? true
+        scheduledLockEnabled = d.bool(forKey: "LG.schedEnabled")
+        scheduledStartMinutes = d.object(forKey: "LG.schedStart") as? Double ?? (22 * 60)
+        scheduledEndMinutes = d.object(forKey: "LG.schedEnd") as? Double ?? (7 * 60)
+        faceScheduleEnabled = d.bool(forKey: "LG.faceSchedEnabled")
+        faceStartMinutes = d.object(forKey: "LG.faceSchedStart") as? Double ?? (9 * 60)
+        faceEndMinutes = d.object(forKey: "LG.faceSchedEnd") as? Double ?? (17 * 60)
+        touchIDEnabled = d.bool(forKey: "LG.touchID")
+        timerMode = TimerMode(rawValue: d.string(forKey: "LG.timerMode") ?? "") ?? .fromLastUnlock
+        launchAtLogin = d.bool(forKey: "LG.launchAtLogin")
+        deletionProtectionEnabled = d.bool(forKey: "LG.deletionProtection")
+    }
+
     /// Whether this Mac actually has Touch ID / biometrics available.
     var biometricsAvailable: Bool {
         var err: NSError?
